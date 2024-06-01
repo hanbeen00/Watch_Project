@@ -18,9 +18,13 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "stdbool.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "stdbool.h"
+#include <stdint.h>
+#include <stdio.h>
+
 #include "7SEG.h"
 #include "CLCD.h"
 /* USER CODE END Includes */
@@ -48,6 +52,11 @@ bool sw1 = false;
 bool sw2 = false;
 bool sw3 = false;
 bool sw4 = false;
+
+uint64_t time = 0;
+uint8_t str[20];
+
+uint16_t Press_Time = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -97,18 +106,41 @@ int main(void) {
 	/* Initialize interrupts */
 	MX_NVIC_Init();
 	/* USER CODE BEGIN 2 */
-	HAL_TIM_Base_Start_IT(&htim7); //TIMER7 시작 code
-	/* USER CODE END 2 */
 	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+
+	HAL_TIM_Base_Start_IT(&htim7); //TIMER7 시작 code
+	CLCD_GPIO_Init();
+	CLCD_Init();
+
+	CLCD_Puts(0, 0, "WELCOME");
+	/* USER CODE END 2 */
+
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
 	while (1) {
+		sprintf(str,"%8d",time);
+		CLCD_Puts(8, 0, str);
 
+		sprintf(str, "%4d", Press_Time);
+		CLCD_Puts(0, 1, str);
+
+		if (Press_Time < 300) {
+			sprintf(str, "%5s", "short");
+			CLCD_Puts(10, 1, str);
+		} else if (Press_Time < 700) {
+			sprintf(str, "%5s", "mid");
+			CLCD_Puts(10, 1, str);
+		} else {
+			sprintf(str, "%5s", "long");
+			CLCD_Puts(10, 1, str);
+		}
+		sprintf(str, "%4d", Press_Time);
+		CLCD_Puts(0, 1, str);
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
@@ -194,7 +226,7 @@ static void MX_TIM7_Init(void) {
 
 	/* USER CODE END TIM7_Init 1 */
 	htim7.Instance = TIM7;
-	htim7.Init.Prescaler = 8400 - 1;
+	htim7.Init.Prescaler = 84 - 1;
 	htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
 	htim7.Init.Period = 10000 - 1;
 	htim7.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -231,6 +263,11 @@ static void MX_GPIO_Init(void) {
 	__HAL_RCC_GPIOD_CLK_ENABLE();
 
 	/*Configure GPIO pin Output Level */
+	HAL_GPIO_WritePin(GPIOE,
+			GPIO_PIN_2 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7
+					| GPIO_PIN_0 | GPIO_PIN_1, GPIO_PIN_RESET);
+
+	/*Configure GPIO pin Output Level */
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0 | GPIO_PIN_5, GPIO_PIN_RESET);
 
 	/*Configure GPIO pin Output Level */
@@ -239,6 +276,15 @@ static void MX_GPIO_Init(void) {
 
 	/*Configure GPIO pin Output Level */
 	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);
+
+	/*Configure GPIO pins : PE2 PE4 PE5 PE6
+	 PE7 PE0 PE1 */
+	GPIO_InitStruct.Pin = GPIO_PIN_2 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6
+			| GPIO_PIN_7 | GPIO_PIN_0 | GPIO_PIN_1;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
 	/*Configure GPIO pin : PE3 */
 	GPIO_InitStruct.Pin = GPIO_PIN_3;
@@ -288,6 +334,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	// timer 7 update event(1 second)
 	if (htim->Instance == TIM7) {
 		//HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
+		time++;
+		if (sw1 == true && Press_Time <= 710) {
+			Press_Time++;
+		}
 	}
 }
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
@@ -296,6 +346,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 			if (sw1 == false) {
 				sw1 = true;
 				HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
+				Press_Time = 0; // sw1이 눌릴 때 Press_Time 초기화
+
 			}
 		} else {
 			if (sw1 == true) {
@@ -303,8 +355,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 				HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
 			}
 		}
-	}
-	else if (GPIO_Pin == GPIO_PIN_15) {
+	} else if (GPIO_Pin == GPIO_PIN_15) {
 		if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_15) == GPIO_PIN_SET) {
 			if (sw2 == false) {
 				sw2 = true;
@@ -316,8 +367,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 				HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
 			}
 		}
-	}
-	else if (GPIO_Pin == GPIO_PIN_4) {
+	} else if (GPIO_Pin == GPIO_PIN_4) {
 		if (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_4) == GPIO_PIN_SET) {
 			if (sw3 == false) {
 				sw3 = true;
@@ -329,8 +379,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 				HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
 			}
 		}
-	}
-	else if (GPIO_Pin == GPIO_PIN_10) {
+	} else if (GPIO_Pin == GPIO_PIN_10) {
 		if (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_10) == GPIO_PIN_SET) {
 			if (sw4 == false) {
 				sw4 = true;
