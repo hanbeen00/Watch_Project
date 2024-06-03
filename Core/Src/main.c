@@ -69,6 +69,7 @@ uint8_t Press_Mode = 0;
 
 //모드 변수
 uint8_t mode = 1;
+bool mode_changed = false;
 
 //STOPWATCH 변수
 uint64_t stopwatch_time = 0;
@@ -378,6 +379,10 @@ void Init_display_operation() {
 	_7SEG_SetNumber(DGT2, time % 100 / 10, OFF);
 }
 void Init_button_operation() {
+	if(mode_changed == true){
+		CLCD_Clear();
+		mode_changed=false;
+	}
 
 	//버튼 PRESS 상태 출력
 	if (Press_Time < 700) {
@@ -568,6 +573,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) { //외부 인터럽트 호출
 				sw1_debounced = true;
 				if (Press_Mode == 1) {
 					mode++;
+					mode_changed=true;
 				}
 			}
 		}
