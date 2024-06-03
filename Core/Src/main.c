@@ -524,7 +524,7 @@ void Timer_basic_operation() {
 void Timer_display_operation() {
     // Display the timer settings or countdown based on mode
     if (timer_setmode) {
-        sprintf(str, "SET %02d:%02d:%02d", (int) (timer_time_tmp / 1000) / 3600,
+        sprintf(str, "SET     %02d:%02d:%02d", (int) (timer_time_tmp / 1000) / 3600,
                 (int) ((timer_time_tmp / 1000) / 60) % 60,
                 (int) (timer_time_tmp / 1000) % 60);
     } else {

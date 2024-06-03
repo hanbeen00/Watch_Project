@@ -7,19 +7,19 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
   1 .text         000043b4  08000190  08000190  00001190  2**4
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  2 .rodata       00000110  08004544  08004544  00005544  2**2
+  2 .rodata       00000114  08004544  08004544  00005544  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  3 .ARM.extab    00000000  08004654  08004654  00006060  2**0
+  3 .ARM.extab    00000000  08004658  08004658  00006060  2**0
                   CONTENTS
-  4 .ARM          00000008  08004654  08004654  00005654  2**2
+  4 .ARM          00000008  08004658  08004658  00005658  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  5 .preinit_array 00000000  0800465c  0800465c  00006060  2**0
+  5 .preinit_array 00000000  08004660  08004660  00006060  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  6 .init_array   00000004  0800465c  0800465c  0000565c  2**2
+  6 .init_array   00000004  08004660  08004660  00005660  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  7 .fini_array   00000004  08004660  08004660  00005660  2**2
+  7 .fini_array   00000004  08004664  08004664  00005664  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  8 .data         00000060  20000000  08004664  00006000  2**2
+  8 .data         00000060  20000000  08004668  00006000  2**2
                   CONTENTS, ALLOC, LOAD, DATA
   9 .ccmram       00000000  10000000  10000000  00006060  2**0
                   CONTENTS
@@ -3709,7 +3709,7 @@ void Timer_display_operation() {
  8001f94:	781b      	ldrb	r3, [r3, #0]
  8001f96:	2b00      	cmp	r3, #0
  8001f98:	d049      	beq.n	800202e <Timer_display_operation+0xa2>
-        sprintf(str, "SET %02d:%02d:%02d", (int) (timer_time_tmp / 1000) / 3600,
+        sprintf(str, "SET     %02d:%02d:%02d", (int) (timer_time_tmp / 1000) / 3600,
  8001f9a:	4b56      	ldr	r3, [pc, #344]	@ (80020f4 <Timer_display_operation+0x168>)
  8001f9c:	e9d3 0100 	ldrd	r0, r1, [r3]
  8001fa0:	f44f 727a 	mov.w	r2, #1000	@ 0x3e8
@@ -3732,7 +3732,7 @@ void Timer_display_operation() {
  8001fce:	f7fe f94f 	bl	8000270 <__aeabi_uldivmod>
  8001fd2:	4602      	mov	r2, r0
  8001fd4:	460b      	mov	r3, r1
-        sprintf(str, "SET %02d:%02d:%02d", (int) (timer_time_tmp / 1000) / 3600,
+        sprintf(str, "SET     %02d:%02d:%02d", (int) (timer_time_tmp / 1000) / 3600,
  8001fd6:	4b49      	ldr	r3, [pc, #292]	@ (80020fc <Timer_display_operation+0x170>)
  8001fd8:	fb83 1302 	smull	r1, r3, r3, r2
  8001fdc:	4413      	add	r3, r2
@@ -3753,7 +3753,7 @@ void Timer_display_operation() {
  8002000:	4602      	mov	r2, r0
  8002002:	460b      	mov	r3, r1
  8002004:	4611      	mov	r1, r2
-        sprintf(str, "SET %02d:%02d:%02d", (int) (timer_time_tmp / 1000) / 3600,
+        sprintf(str, "SET     %02d:%02d:%02d", (int) (timer_time_tmp / 1000) / 3600,
  8002006:	4b3d      	ldr	r3, [pc, #244]	@ (80020fc <Timer_display_operation+0x170>)
  8002008:	fb83 2301 	smull	r2, r3, r3, r1
  800200c:	440b      	add	r3, r1
@@ -3868,7 +3868,7 @@ void Timer_display_operation() {
  8002100:	080045e4 	.word	0x080045e4
  8002104:	200000d8 	.word	0x200000d8
  8002108:	10624dd3 	.word	0x10624dd3
- 800210c:	080045f8 	.word	0x080045f8
+ 800210c:	080045fc 	.word	0x080045fc
 
 08002110 <HAL_TIM_PeriodElapsedCallback>:
 
@@ -4773,7 +4773,7 @@ LoopFillZerobss:
   ldr r1, =_edata
  8002598:	20000060 	.word	0x20000060
   ldr r2, =_sidata
- 800259c:	08004664 	.word	0x08004664
+ 800259c:	08004668 	.word	0x08004668
   ldr r2, =_sbss
  80025a0:	20000060 	.word	0x20000060
   ldr r4, =_ebss
@@ -7307,7 +7307,7 @@ HAL_StatusTypeDef HAL_RCC_ClockConfig(RCC_ClkInitTypeDef  *RCC_ClkInitStruct, ui
  80033a2:	bf00      	nop
  80033a4:	40023c00 	.word	0x40023c00
  80033a8:	40023800 	.word	0x40023800
- 80033ac:	08004610 	.word	0x08004610
+ 80033ac:	08004614 	.word	0x08004614
  80033b0:	20000004 	.word	0x20000004
  80033b4:	20000008 	.word	0x20000008
 
@@ -8757,10 +8757,10 @@ __weak void HAL_TIMEx_BreakCallback(TIM_HandleTypeDef *htim)
  8003c7a:	4798      	blx	r3
  8003c7c:	3601      	adds	r6, #1
  8003c7e:	e7f2      	b.n	8003c66 <__libc_init_array+0x1e>
- 8003c80:	0800465c 	.word	0x0800465c
- 8003c84:	0800465c 	.word	0x0800465c
- 8003c88:	0800465c 	.word	0x0800465c
- 8003c8c:	08004660 	.word	0x08004660
+ 8003c80:	08004660 	.word	0x08004660
+ 8003c84:	08004660 	.word	0x08004660
+ 8003c88:	08004660 	.word	0x08004660
+ 8003c8c:	08004664 	.word	0x08004664
 
 08003c90 <__retarget_lock_acquire_recursive>:
  8003c90:	4770      	bx	lr
@@ -9266,11 +9266,11 @@ __weak void HAL_TIMEx_BreakCallback(TIM_HandleTypeDef *htim)
  8004118:	4638      	mov	r0, r7
  800411a:	f000 f879 	bl	8004210 <_printf_i>
  800411e:	e7ed      	b.n	80040fc <_svfiprintf_r+0x1c0>
- 8004120:	08004620 	.word	0x08004620
- 8004124:	0800462a 	.word	0x0800462a
+ 8004120:	08004624 	.word	0x08004624
+ 8004124:	0800462e 	.word	0x0800462e
  8004128:	00000000 	.word	0x00000000
  800412c:	08003e85 	.word	0x08003e85
- 8004130:	08004626 	.word	0x08004626
+ 8004130:	0800462a 	.word	0x0800462a
 
 08004134 <_printf_common>:
  8004134:	e92d 47f0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, sl, lr}
@@ -9601,8 +9601,8 @@ __weak void HAL_TIMEx_BreakCallback(TIM_HandleTypeDef *htim)
  8004440:	f104 0619 	add.w	r6, r4, #25
  8004444:	e7f5      	b.n	8004432 <_printf_i+0x222>
  8004446:	bf00      	nop
- 8004448:	08004631 	.word	0x08004631
- 800444c:	08004642 	.word	0x08004642
+ 8004448:	08004635 	.word	0x08004635
+ 800444c:	08004646 	.word	0x08004646
 
 08004450 <memmove>:
  8004450:	4288      	cmp	r0, r1
