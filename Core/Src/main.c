@@ -387,17 +387,11 @@ void Stopwatch_basic_operation() {
 
 }
 void Stopwatch_display_operation() {
-	sprintf(str, "%4s", "STW "); // 스톱워치 시간 1ms 단위 LCD 출력
+	sprintf(str, "%4s%02d:%02d:%02d.%03d", "STW ",
+			(int) (stopwatch_time / 1000) / 3600,
+			(int) ((stopwatch_time / 1000) / 60) % 60,
+			(int) (stopwatch_time / 1000) % 60, (int) stopwatch_time % 1000);
 	CLCD_Puts(0, 0, str);
-
-	sprintf(str, "%02d:", (stopwatch_time / 1000) / 3600);
-	CLCD_Puts(0, 4, str);
-	sprintf(str, "%02d:", ((stopwatch_time / 1000) / 60) % 60);
-	CLCD_Puts(0, 7, str);
-	sprintf(str, "%02d.", (stopwatch_time / 1000) % 60);
-	CLCD_Puts(0, 10, str);
-	sprintf(str, "%03d", stopwatch_time % 1000);
-	CLCD_Puts(0, 13, str);
 
 	//0.1, 0.01초 단위 7SEG 출력
 	if (stopwatch_time % 1000 / 100 > 4) { // 0.5초간 7SEG 깜박임
@@ -431,17 +425,13 @@ void Stopwatch_button_operation() {
 		if (lap_time_index < 9) {
 			lap_time_index++;
 			lap_time[lap_time_index] = stopwatch_time;
-			sprintf(str, "%02d:", (lap_time[lap_time_index] / 1000) / 3600);
-			CLCD_Puts(4, 1, str);
-			sprintf(str, "%02d:",
-					((lap_time[lap_time_index] / 1000) / 60) % 60);
-			CLCD_Puts(7, 1, str);
-			sprintf(str, "%02d.", (lap_time[lap_time_index] / 1000) % 60);
-			CLCD_Puts(10, 1, str);
-			sprintf(str, "%03d", lap_time[lap_time_index] % 1000);
-			CLCD_Puts(13, 1, str);
-			sprintf(str, "%2s%d ", "LP", lap_time_index); // 스톱워치 시간 1ms 단위 LCD 출력
+			sprintf(str, "%2s%d %02d:%02d:%02d.%03d", "LP", lap_time_index,
+					(int) (stopwatch_time / 1000) / 3600,
+					(int) ((stopwatch_time / 1000) / 60) % 60,
+					(int) (stopwatch_time / 1000) % 60,
+					(int) stopwatch_time % 1000);
 			CLCD_Puts(0, 1, str);
+
 		}
 
 		else {
@@ -454,17 +444,15 @@ void Stopwatch_button_operation() {
 	if (mode == 2 && lap_time_index != 0 && sw4_debounced == true) {
 		lap_time_click++;
 		if (lap_time_click <= lap_time_index) {
-			sprintf(str, "%02d:", (lap_time[lap_time_click] / 1000) / 3600);
-			CLCD_Puts(4, 1, str);
-			sprintf(str, "%02d:",
-					((lap_time[lap_time_click] / 1000) / 60) % 60);
-			CLCD_Puts(7, 1, str);
-			sprintf(str, "%02d.", (lap_time[lap_time_click] / 1000) % 60);
-			CLCD_Puts(10, 1, str);
-			sprintf(str, "%03d", lap_time[lap_time_click] % 1000);
-			CLCD_Puts(13, 1, str);
-			sprintf(str, "%1d/%1d ", lap_time_click, lap_time_index); // 스톱워치 시간 1ms 단위 LCD 출력
+			sprintf(str, "%1d/%1d %02d:%02d:%02d.%03d",
+					lap_time_click,
+					lap_time_index,
+					(int) (stopwatch_time / 1000) / 3600,
+					(int) ((stopwatch_time / 1000) / 60) % 60,
+					(int) (stopwatch_time / 1000) % 60,
+					(int) stopwatch_time % 1000);
 			CLCD_Puts(0, 1, str);
+
 			if (lap_time_click == lap_time_index) {
 				lap_time_click = 0;
 			}
