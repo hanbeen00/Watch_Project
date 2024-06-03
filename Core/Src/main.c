@@ -512,7 +512,8 @@ void Timer_button_operation() {
 
 void Timer_basic_operation() {
     // If the timer is running, decrement the timer
-
+		sprintf(str,"%5s","TIMER");
+		CLCD_Puts(0, 0, str);
         if (timer_time == 0) {
             // Timer finished, trigger any required action, e.g., sound an alarm
             HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14, GPIO_PIN_RESET); // Example: turn on an LED
@@ -546,7 +547,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) { //타이머 인터
 		if (sw1 == true && Press_Time <= 2510) { //스위치 누를때 press 시간 증가
 			Press_Time++;
 		}
-		if (timer_time > 0) {
+		if (timer_time > 0 && timer_time_tmp>0) {
 		        timer_time_tmp--;
 		}
 	}
