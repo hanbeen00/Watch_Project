@@ -65,6 +65,7 @@ uint8_t str[20];
 
 //버튼 누른 시간 변수
 uint16_t Press_Time = 0;
+uint8_t Press_Mode = 0;
 
 //모드 변수
 uint8_t mode = 1;
@@ -75,6 +76,11 @@ uint64_t lap_time[10] = { 0, };
 uint8_t lap_time_index = 0;
 uint8_t lap_time_click = 0;
 bool stopwatch_running = false;  // 스톱워치 실행 여부를 나타내는 플래그
+
+//TIMER 변수
+uint64_t timer_time = 0;
+uint64_t timer_time_tmp = 0;
+bool timer_setmode = false;
 
 /* USER CODE END PV */
 
@@ -145,7 +151,7 @@ int main(void) {
 	/* USER CODE BEGIN WHILE */
 	while (1) {
 
-		if (mode > 2)
+		if (mode > 3)
 			mode = 1;
 
 		switch (mode) {
@@ -158,7 +164,13 @@ int main(void) {
 			Stopwatch_basic_operation();
 			Stopwatch_display_operation();
 			Stopwatch_button_operation();
+			Init_button_operation();
 			break;
+		case 3:
+			Timer_basic_operation();
+			Timer_display_operation();
+			Timer_button_operation();
+			Init_button_operation();
 		}
 
 		/* USER CODE END WHILE */
@@ -369,18 +381,12 @@ void Init_button_operation() {
 
 	//버튼 PRESS 상태 출력
 	if (Press_Time < 700) {
-		sprintf(str, "%5s", "short");
-		CLCD_Puts(10, 1, str);
+		Press_Mode = 1;
 	} else if (Press_Time < 2500) {
-		sprintf(str, "%5s", "mid");
-		CLCD_Puts(10, 1, str);
+		Press_Mode = 2;
 	} else {
-		sprintf(str, "%5s", "long");
-		CLCD_Puts(10, 1, str);
+		Press_Mode = 3;
 	}
-	//버튼 누른 시간 LCD 출력
-	sprintf(str, "%4d", Press_Time);
-	CLCD_Puts(0, 0, str);
 }
 
 void Stopwatch_basic_operation() {
@@ -393,7 +399,7 @@ void Stopwatch_display_operation() {
 			(int) (stopwatch_time / 1000) % 60, (int) stopwatch_time % 1000);
 	CLCD_Puts(0, 0, str);
 
-	//0.1, 0.01초 단위 7SEG 출력
+//0.1, 0.01초 단위 7SEG 출력
 	if (stopwatch_time % 1000 / 100 > 4) { // 0.5초간 7SEG 깜박임
 		_7SEG_SetNumber(DGT1, stopwatch_time / 1000 % 10, OFF);
 	} else {
@@ -444,10 +450,8 @@ void Stopwatch_button_operation() {
 	if (mode == 2 && lap_time_index != 0 && sw4_debounced == true) {
 		lap_time_click++;
 		if (lap_time_click <= lap_time_index) {
-			sprintf(str, "%1d/%1d %02d:%02d:%02d.%03d",
-					lap_time_click,
-					lap_time_index,
-					(int) (stopwatch_time / 1000) / 3600,
+			sprintf(str, "%1d/%1d %02d:%02d:%02d.%03d", lap_time_click,
+					lap_time_index, (int) (stopwatch_time / 1000) / 3600,
 					(int) ((stopwatch_time / 1000) / 60) % 60,
 					(int) (stopwatch_time / 1000) % 60,
 					(int) stopwatch_time % 1000);
@@ -468,6 +472,71 @@ void Stopwatch_button_operation() {
 	}
 }
 
+void Timer_button_operation() {
+    // Enter timer setting mode on long press of button 1 (sw1)
+    if (sw1_debounced) {
+        if (Press_Mode >= 2) {
+            timer_setmode = !timer_setmode; // Toggle timer setting mode
+            Press_Mode = 0;
+        }
+        sw1_debounced = false;
+    }
+
+    // Setting mode adjustments
+    if (timer_setmode) {
+        // Adjusting the timer settings using buttons (assuming sw2 to increase hours, sw3 to increase minutes, sw4 to increase seconds)
+        if (sw2_debounced) {
+            timer_time_tmp += 3600000; // Increase hours
+            sw2_debounced = false;
+        }
+        if (sw3_debounced) {
+            timer_time_tmp += 60000; // Increase minutes
+            sw3_debounced = false;
+        }
+        if (sw4_debounced) {
+            timer_time_tmp += 1000; // Increase seconds
+            sw4_debounced = false;
+        }
+    } else {
+        // Starting/Stopping the timer using button 2 (sw2)
+        if (sw2_debounced) {
+            if (timer_time == 0) { // Start the timer
+                timer_time = timer_time_tmp;
+            } else { // Stop the timer
+                timer_time = 0;
+            }
+            sw2_debounced = false;
+        }
+    }
+}
+
+void Timer_basic_operation() {
+    // If the timer is running, decrement the timer
+
+        if (timer_time == 0) {
+            // Timer finished, trigger any required action, e.g., sound an alarm
+            HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14, GPIO_PIN_RESET); // Example: turn on an LED
+        }
+
+}
+
+void Timer_display_operation() {
+    // Display the timer settings or countdown based on mode
+    if (timer_setmode) {
+        sprintf(str, "SET %02d:%02d:%02d", (int) (timer_time_tmp / 1000) / 3600,
+                (int) ((timer_time_tmp / 1000) / 60) % 60,
+                (int) (timer_time_tmp / 1000) % 60);
+    } else {
+        sprintf(str, "    %02d:%02d:%02d.%03d",
+                (int) (timer_time_tmp / 1000) / 3600,
+                (int) ((timer_time_tmp / 1000) / 60) % 60,
+                (int) (timer_time_tmp / 1000) % 60,
+                (int) timer_time_tmp % 1000);
+    }
+    CLCD_Puts(0, 1, str);
+}
+
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) { //타이머 인터럽트 호출
 	if (htim->Instance == TIM7) { //1ms 마다 타이머 인터럽트
 		time++; //총 시간 증가
@@ -476,6 +545,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) { //타이머 인터
 		}
 		if (sw1 == true && Press_Time <= 2510) { //스위치 누를때 press 시간 증가
 			Press_Time++;
+		}
+		if (timer_time > 0) {
+		        timer_time_tmp--;
 		}
 	}
 }
@@ -493,7 +565,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) { //외부 인터럽트 호출
 				sw1 = false;
 				HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
 				sw1_debounced = true;
-				mode++;
+				if (Press_Mode == 1) {
+					mode++;
+				}
 			}
 		}
 	}
