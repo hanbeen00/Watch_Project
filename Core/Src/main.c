@@ -379,9 +379,9 @@ void Init_display_operation() {
 	_7SEG_SetNumber(DGT2, time % 100 / 10, OFF);
 }
 void Init_button_operation() {
-	if(mode_changed == true){
+	if (mode_changed == true) {
 		CLCD_Clear();
-		mode_changed=false;
+		mode_changed = false;
 	}
 
 	//버튼 PRESS 상태 출력
@@ -478,70 +478,74 @@ void Stopwatch_button_operation() {
 }
 
 void Timer_button_operation() {
-    // Enter timer setting mode on long press of button 1 (sw1)
-    if (sw1_debounced) {
-        if (Press_Mode >= 2) {
-            timer_setmode = !timer_setmode; // Toggle timer setting mode
-            Press_Mode = 0;
-        }
-        sw1_debounced = false;
-    }
+	// Enter timer setting mode on long press of button 1 (sw1)
+	if (sw1_debounced) {
+		if (Press_Mode >= 2) {
+			timer_setmode = !timer_setmode; // Toggle timer setting mode
+			Press_Mode = 0;
+		}
+		sw1_debounced = false;
+	}
 
-    // Setting mode adjustments
-    if (timer_setmode) {
-        // Adjusting the timer settings using buttons (assuming sw2 to increase hours, sw3 to increase minutes, sw4 to increase seconds)
-        if (sw2_debounced) {
-            timer_time_tmp += 3600000; // Increase hours
-            sw2_debounced = false;
-        }
-        if (sw3_debounced) {
-            timer_time_tmp += 60000; // Increase minutes
-            sw3_debounced = false;
-        }
-        if (sw4_debounced) {
-            timer_time_tmp += 1000; // Increase seconds
-            sw4_debounced = false;
-        }
-    } else {
-        // Starting/Stopping the timer using button 2 (sw2)
-        if (sw2_debounced) {
-            if (timer_time == 0) { // Start the timer
-                timer_time = timer_time_tmp;
-            } else { // Stop the timer
-                timer_time = 0;
-            }
-            sw2_debounced = false;
-        }
-    }
+	// Setting mode adjustments
+	if (timer_setmode) {
+		// Adjusting the timer settings using buttons (assuming sw2 to increase hours, sw3 to increase minutes, sw4 to increase seconds)
+		if (sw2_debounced) {
+			timer_time_tmp += 3600000; // Increase hours
+			sw2_debounced = false;
+		}
+		if (sw3_debounced) {
+			timer_time_tmp += 60000; // Increase minutes
+			sw3_debounced = false;
+		}
+		if (sw4_debounced) {
+			timer_time_tmp += 1000; // Increase seconds
+			sw4_debounced = false;
+		}
+	} else {
+		// Starting/Stopping the timer using button 2 (sw2)
+		if (sw2_debounced) {
+			if (timer_time == 0) { // Start the timer
+				timer_time = timer_time_tmp;
+			} else { // Stop the timer
+				timer_time = 0;
+			}
+			sw2_debounced = false;
+		}
+	}
+
+	if (timer_time_tmp <= 0) {
+		timer_time = 0;
+	}
 }
 
 void Timer_basic_operation() {
-    // If the timer is running, decrement the timer
-		sprintf(str,"%5s","TIMER");
-		CLCD_Puts(0, 0, str);
-        if (timer_time == 0) {
-            // Timer finished, trigger any required action, e.g., sound an alarm
-            HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14, GPIO_PIN_RESET); // Example: turn on an LED
-        }
+	// If the timer is running, decrement the timer
+	sprintf(str, "%5s", "TIMER");
+	CLCD_Puts(0, 0, str);
+	if (timer_time == 0) {
+		// Timer finished, trigger any required action, e.g., sound an alarm
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14, GPIO_PIN_RESET); // Example: turn on an LED
+	}
 
 }
 
 void Timer_display_operation() {
-    // Display the timer settings or countdown based on mode
-    if (timer_setmode) {
-        sprintf(str, "SET     %02d:%02d:%02d", (int) (timer_time_tmp / 1000) / 3600,
-                (int) ((timer_time_tmp / 1000) / 60) % 60,
-                (int) (timer_time_tmp / 1000) % 60);
-    } else {
-        sprintf(str, "    %02d:%02d:%02d.%03d",
-                (int) (timer_time_tmp / 1000) / 3600,
-                (int) ((timer_time_tmp / 1000) / 60) % 60,
-                (int) (timer_time_tmp / 1000) % 60,
-                (int) timer_time_tmp % 1000);
-    }
-    CLCD_Puts(0, 1, str);
+	// Display the timer settings or countdown based on mode
+	if (timer_setmode) {
+		sprintf(str, "SET     %02d:%02d:%02d",
+				(int) (timer_time_tmp / 1000) / 3600,
+				(int) ((timer_time_tmp / 1000) / 60) % 60,
+				(int) (timer_time_tmp / 1000) % 60);
+	} else {
+		sprintf(str, "    %02d:%02d:%02d.%03d",
+				(int) (timer_time_tmp / 1000) / 3600,
+				(int) ((timer_time_tmp / 1000) / 60) % 60,
+				(int) (timer_time_tmp / 1000) % 60,
+				(int) timer_time_tmp % 1000);
+	}
+	CLCD_Puts(0, 1, str);
 }
-
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) { //타이머 인터럽트 호출
 	if (htim->Instance == TIM7) { //1ms 마다 타이머 인터럽트
@@ -552,8 +556,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) { //타이머 인터
 		if (sw1 == true && Press_Time <= 2510) { //스위치 누를때 press 시간 증가
 			Press_Time++;
 		}
-		if (timer_time > 0 && timer_time_tmp>0) {
-		        timer_time_tmp--;
+		if (timer_time > 0 && timer_time_tmp > 0) {
+			timer_time_tmp--;
 		}
 	}
 }
@@ -573,7 +577,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) { //외부 인터럽트 호출
 				sw1_debounced = true;
 				if (Press_Mode == 1) {
 					mode++;
-					mode_changed=true;
+					mode_changed = true;
 				}
 			}
 		}

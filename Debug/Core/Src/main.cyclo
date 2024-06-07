@@ -9,9 +9,9 @@
 ../Core/Src/main.c:397:6:Stopwatch_basic_operation	1
 ../Core/Src/main.c:400:6:Stopwatch_display_operation	2
 ../Core/Src/main.c:415:6:Stopwatch_button_operation	19
-../Core/Src/main.c:480:6:Timer_button_operation	9
-../Core/Src/main.c:518:6:Timer_basic_operation	2
-../Core/Src/main.c:529:6:Timer_display_operation	2
-../Core/Src/main.c:546:6:HAL_TIM_PeriodElapsedCallback	7
-../Core/Src/main.c:560:6:HAL_GPIO_EXTI_Callback	18
-../Core/Src/main.c:633:6:Error_Handler	1
+../Core/Src/main.c:480:6:Timer_button_operation	10
+../Core/Src/main.c:522:6:Timer_basic_operation	2
+../Core/Src/main.c:533:6:Timer_display_operation	2
+../Core/Src/main.c:550:6:HAL_TIM_PeriodElapsedCallback	7
+../Core/Src/main.c:564:6:HAL_GPIO_EXTI_Callback	18
+../Core/Src/main.c:637:6:Error_Handler	1
