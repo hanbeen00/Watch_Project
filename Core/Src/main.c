@@ -211,6 +211,7 @@ void SystemClock_Config(void) {
 
 	/** Initializes the CPU, AHB and APB buses clocks
 	 */
+
 	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK
 			| RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
 	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
@@ -564,6 +565,15 @@ void Timer_display_operation() {
 				(int) timer_time_tmp % 1000);
 	}
 	CLCD_Puts(0, 1, str);
+
+	//0.1, 0.01초 단위 7SEG 출력
+
+	if (timer_time_tmp % 1000 / 100 > 5) { // 0.5초간 7SEG 깜박임
+		_7SEG_SetNumber(DGT1, timer_time_tmp % 1000 / 100, OFF);
+	} else {
+		_7SEG_SetNumber(DGT1, timer_time_tmp % 1000 / 100, ON);
+	}
+	_7SEG_SetNumber(DGT2, timer_time_tmp % 100 / 10, OFF);
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) { //타이머 인터럽트 호출
