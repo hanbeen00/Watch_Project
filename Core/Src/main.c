@@ -475,6 +475,10 @@ void Stopwatch_button_operation() {
 		CLCD_Puts(0, 1, str);
 		sw4_debounced = false;
 	}
+
+	if (mode != 2) {
+		lap_time_click = 0;
+	}
 }
 
 void Timer_button_operation() {
@@ -482,6 +486,7 @@ void Timer_button_operation() {
 	if (sw1_debounced) {
 		if (Press_Mode >= 2) {
 			timer_setmode = !timer_setmode; // Toggle timer setting mode
+			timer_time = 0;
 			Press_Mode = 0;
 		}
 		sw1_debounced = false;
@@ -512,6 +517,13 @@ void Timer_button_operation() {
 			}
 			sw2_debounced = false;
 		}
+
+		if (sw3_debounced) {
+			sw3_debounced = false;
+		}
+		if (sw4_debounced) {
+			sw4_debounced = false;
+		}
 	}
 
 	if (timer_time_tmp <= 0) {
@@ -521,11 +533,18 @@ void Timer_button_operation() {
 
 void Timer_basic_operation() {
 	// If the timer is running, decrement the timer
-	sprintf(str, "%5s", "TIMER");
-	CLCD_Puts(0, 0, str);
+
 	if (timer_time == 0) {
-		// Timer finished, trigger any required action, e.g., sound an alarm
-		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14, GPIO_PIN_RESET); // Example: turn on an LED
+		if (timer_setmode) {
+			sprintf(str, "%16s", "TIMER           ");
+			CLCD_Puts(0, 0, str);
+		} else {
+			sprintf(str, "%16s", "TIMER      START");
+			CLCD_Puts(0, 0, str);
+		}
+	} else {
+		sprintf(str, "%16s", "TIMER    RUNNING");
+		CLCD_Puts(0, 0, str);
 	}
 
 }
