@@ -71,6 +71,14 @@ uint8_t Press_Mode = 0;
 uint8_t mode = 1;
 bool mode_changed = false;
 
+//CLOCK 변수
+uint64_t clock_time = (23 * 60 * 60 + 59 * 60 + 30) * 1000;
+uint8_t hour;
+uint8_t minute;
+uint8_t second;
+uint16_t millisecond;
+bool changed = false;
+
 //STOPWATCH 변수
 uint64_t stopwatch_time = 0;
 uint64_t lap_time[10] = { 0, };
@@ -151,8 +159,13 @@ int main(void) {
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
 	while (1) {
+		hour = clock_time / 1000 / 3600;
+		minute = (clock_time - hour * 1000 * 3600) / 1000 / 60;
+		second = (clock_time - hour * 1000 * 3600 - minute * 1000 * 60) / 1000;
+		millisecond = (clock_time - hour * 1000 * 3600 - minute * 1000 * 60
+				- second * 1000);
 
-		if (mode > 3)
+		if (mode > 4)
 			mode = 1;
 
 		switch (mode) {
@@ -162,12 +175,17 @@ int main(void) {
 			Init_button_operation();
 			break;
 		case 2:
+			Clock_basic_operation();
+			Clock_display_operation();
+			Clock_button_operation();
+			break;
+		case 3:
 			Stopwatch_basic_operation();
 			Stopwatch_display_operation();
 			Stopwatch_button_operation();
 			Init_button_operation();
 			break;
-		case 3:
+		case 4:
 			Timer_basic_operation();
 			Timer_display_operation();
 			Timer_button_operation();
@@ -395,6 +413,35 @@ void Init_button_operation() {
 	}
 }
 
+void Clock_basic_operation() {
+
+}
+void Clock_display_operation() {
+	if (changed == false) { // NOT AM/PM
+		sprintf(str, "%02d:%02d   ", (int) hour, (int) minute);
+		CLCD_Puts(0, 0, str);
+	} else { // AM/PM
+		uint8_t displayHour = (int) hour % 12;
+		if (displayHour == 0)
+			displayHour = 12; // 0시를 12시로 변환
+		const char *period = (hour < 12) ? "AM" : "PM";
+		sprintf(str, "%02d:%02d %s", displayHour, (int) minute, period);
+		CLCD_Puts(0, 0, str);
+	}
+
+	sprintf(str, "%02d:%02d:%02d.%03d", (int) hour, (int) minute, (int) second,
+			(int) millisecond);
+	CLCD_Puts(0, 1, str);
+}
+void Clock_button_operation() {
+	if (sw4_debounced == true) {
+		if (lap_time_index == 0) {
+			changed = !changed;
+		}
+		sw4_debounced = false;
+	}
+}
+
 void Stopwatch_basic_operation() {
 
 }
@@ -414,7 +461,7 @@ void Stopwatch_display_operation() {
 	_7SEG_SetNumber(DGT2, stopwatch_time % 1000 / 100, OFF);
 }
 void Stopwatch_button_operation() {
-	if (mode == 2 && sw2_debounced == true) {
+	if (sw2_debounced == true) {
 		if (lap_time_index == 0) {
 			sprintf(str, "%16s", ""); // 스톱워치 시간 1ms 단위 LCD 출력
 			CLCD_Puts(0, 1, str);
@@ -423,7 +470,7 @@ void Stopwatch_button_operation() {
 		sw2_debounced = false;
 	}
 
-	if (mode == 2 && stopwatch_running == false && sw3_debounced == true) {
+	if (stopwatch_running == false && sw3_debounced == true) {
 		stopwatch_time = 0;
 		lap_time_index = 0;
 		sprintf(str, "%16s", ""); // 스톱워치 시간 1ms 단위 LCD 출력
@@ -431,7 +478,7 @@ void Stopwatch_button_operation() {
 		sw3_debounced = false;
 	}
 
-	else if (mode == 2 && stopwatch_running == true && sw3_debounced == true) {
+	else if (stopwatch_running == true && sw3_debounced == true) {
 		lap_time_click = 0;
 
 		if (lap_time_index < 9) {
@@ -453,7 +500,7 @@ void Stopwatch_button_operation() {
 		sw3_debounced = false;
 	}
 
-	if (mode == 2 && lap_time_index != 0 && sw4_debounced == true) {
+	if (lap_time_index != 0 && sw4_debounced == true) {
 		lap_time_click++;
 		if (lap_time_click <= lap_time_index) {
 			sprintf(str, "%1d/%1d %02d:%02d:%02d.%03d", lap_time_click,
@@ -471,7 +518,7 @@ void Stopwatch_button_operation() {
 		sw4_debounced = false;
 	}
 
-	else if (mode == 2 && lap_time_index == 0 && sw4_debounced == true) {
+	else if (lap_time_index == 0 && sw4_debounced == true) {
 		sprintf(str, "%16s", "NO LAP          "); // 스톱워치 시간 1ms 단위 LCD 출력
 		CLCD_Puts(0, 1, str);
 		sw4_debounced = false;
@@ -579,6 +626,12 @@ void Timer_display_operation() {
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) { //타이머 인터럽트 호출
 	if (htim->Instance == TIM7) { //1ms 마다 타이머 인터럽트
 		time++; //총 시간 증가
+		clock_time++;
+
+		if (clock_time == 86400000) {
+			clock_time = 0;
+		}
+
 		if (stopwatch_running == true) {
 			stopwatch_time++;
 		}
