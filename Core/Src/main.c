@@ -400,6 +400,7 @@ void Init_display_operation() {
 void Init_button_operation() {
 	if (mode_changed == true) {
 		CLCD_Clear();
+		lap_time_click = 0;
 		mode_changed = false;
 	}
 
@@ -443,9 +444,7 @@ void Clock_display_operation() {
 }
 void Clock_button_operation() {
 	if (sw4_debounced == true) {
-		if (lap_time_index == 0) {
 			changed = !changed;
-		}
 		sw4_debounced = false;
 	}
 }
