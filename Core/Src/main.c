@@ -79,6 +79,8 @@ uint8_t second;
 uint16_t millisecond;
 bool changed = false;
 
+bool buzzer = false;
+
 //STOPWATCH 변수
 uint64_t stopwatch_time = 0;
 uint64_t lap_time[10] = { 0, };
@@ -434,6 +436,14 @@ void Clock_display_operation() {
 			(int) millisecond);
 	CLCD_Puts(0, 1, str);
 
+	if (buzzer == false) {
+		sprintf(str, "BZ OFF");
+		CLCD_Puts(10, 0, str);
+	} else {
+		sprintf(str, "BZ ON ");
+		CLCD_Puts(10, 0, str);
+	}
+
 	//0.1, 0.01초 단위 7SEG 출력
 	if (millisecond / 100 > 5) { // 0.5초간 7SEG 깜박임
 		_7SEG_SetNumber(DGT2, second % 10, OFF);
@@ -444,8 +454,13 @@ void Clock_display_operation() {
 }
 void Clock_button_operation() {
 	if (sw4_debounced == true) {
-			changed = !changed;
+		changed = !changed;
 		sw4_debounced = false;
+	}
+
+	if (sw2_debounced == true) {
+		buzzer = !buzzer;
+		sw2_debounced = false;
 	}
 }
 
@@ -491,7 +506,7 @@ void Stopwatch_button_operation() {
 		if (lap_time_index < 9) {
 			lap_time_index++;
 			lap_time[lap_time_index] = stopwatch_time;
-			sprintf(str, "%2s%d %02d:%02d:%02d.%03d", "LP", lap_time_index,
+			sprintf(str, "LP%d %02d:%02d:%02d.%03d", lap_time_index,
 					(int) (stopwatch_time / 1000) / 3600,
 					(int) ((stopwatch_time / 1000) / 60) % 60,
 					(int) (stopwatch_time / 1000) % 60,
@@ -508,33 +523,27 @@ void Stopwatch_button_operation() {
 	}
 
 	if (lap_time_index != 0 && sw4_debounced == true) {
-			lap_time_click++;
-			if (lap_time_click <= lap_time_index) {
-				sprintf(str, "%02d:", (lap_time[lap_time_click] / 1000) / 3600);
-				CLCD_Puts(4, 1, str);
-				sprintf(str, "%02d:",
-						((lap_time[lap_time_click] / 1000) / 60) % 60);
-				CLCD_Puts(7, 1, str);
-				sprintf(str, "%02d.", (lap_time[lap_time_click] / 1000) % 60);
-				CLCD_Puts(10, 1, str);
-				sprintf(str, "%03d", lap_time[lap_time_click] % 1000);
-				CLCD_Puts(13, 1, str);
-				sprintf(str, "%1d/%1d ", lap_time_click, lap_time_index); // 스톱워치 시간 1ms 단위 LCD 출력
-				CLCD_Puts(0, 1, str);
-				if (lap_time_click == lap_time_index) {
-					lap_time_click = 0;
-				}
+		lap_time_click++;
+		if (lap_time_click <= lap_time_index) {
+			sprintf(str, "%1d/%1d %02d:%02d:%02d.%03d", lap_time_click, lap_time_index,
+								(int) (lap_time[lap_time_click] / 1000) / 3600,
+								(int) ((lap_time[lap_time_click] / 1000) / 60) % 60,
+								(int) (lap_time[lap_time_click] / 1000) % 60,
+								(int) lap_time[lap_time_click] % 1000);
+			CLCD_Puts(0, 1, str);
+			if (lap_time_click == lap_time_index) {
+				lap_time_click = 0;
 			}
-
-			sw4_debounced = false;
 		}
+
+		sw4_debounced = false;
+	}
 
 	else if (lap_time_index == 0 && sw4_debounced == true) {
 		sprintf(str, "%16s", "NO LAP          "); // 스톱워치 시간 1ms 단위 LCD 출력
 		CLCD_Puts(0, 1, str);
 		sw4_debounced = false;
 	}
-
 
 }
 
