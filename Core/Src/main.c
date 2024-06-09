@@ -393,7 +393,40 @@ static void MX_GPIO_Init(void) {
 
 /* USER CODE BEGIN 4 */
 void Init_basic_operation() {
+	sprintf(str, "%8d", time / 1000); //1초 단위 LCD 출력
+	CLCD_Puts(8, 0, str);
 
+	//0.1, 0.01초 단위 7SEG 출력
+	if (time % 1000 / 100 > 5) { // 0.5초간 7SEG 깜박임
+		_7SEG_SetNumber(DGT1, time % 1000 / 100, OFF);
+	} else {
+		_7SEG_SetNumber(DGT1, time % 1000 / 100, ON);
+	}
+	_7SEG_SetNumber(DGT2, time % 100 / 10, OFF);
+
+	//버튼 누른 시간 LCD 출력
+	sprintf(str, "%4d", Press_Time);
+	CLCD_Puts(0, 1, str);
+
+	sprintf(str, "%4d", year);
+	CLCD_Puts(0, 0, str);
+
+	//버튼 PRESS 상태 출력
+	if (Press_Time == 0) {
+		sprintf(str, "%5s", "no");
+		CLCD_Puts(10, 1, str);
+	} else if (0 < Press_Time && Press_Time < 700) {
+		sprintf(str, "%5s", "short");
+		CLCD_Puts(10, 1, str);
+	} else if (700 <= Press_Time && Press_Time < 2500) {
+		sprintf(str, "%5s", "mid");
+		CLCD_Puts(10, 1, str);
+	} else if (2500 <= Press_Time) {
+		sprintf(str, "%5s", "long");
+		CLCD_Puts(10, 1, str);
+	}
+	sprintf(str, "%4d", Press_Time);
+	CLCD_Puts(0, 1, str);
 }
 void Init_display_operation() {
 
@@ -410,22 +443,22 @@ void Init_button_operation() {
 		CLCD_Clear();
 		lap_time_click = 0;
 		mode_changed = false;
+		item_select = 0;
 	}
 
-	//버튼 PRESS 상태 출력
-	if (Press_Time < 700) {
+	if (Press_Time == 0) {
+		Press_Mode = 0;
+	} else if (0 < Press_Time && Press_Time < 700) {
 		Press_Mode = 1;
-	} else if (Press_Time < 2500) {
+	} else if (700 <= Press_Time && Press_Time < 2500) {
 		Press_Mode = 2;
-	} else {
+	} else if (2500 <= Press_Time) {
 		Press_Mode = 3;
 	}
+
 }
 
 void Clock_basic_operation() {
-	/*if (clock_time >= 86400000) { // 자정이 되면
-	 clock_time = 0;
-	 day++;*/
 
 	if ((month == 4 || month == 6 || month == 9 || month == 11) && day == 31) {
 		month++;
@@ -452,7 +485,6 @@ void Clock_basic_operation() {
 			}
 		}
 	}
-	//}
 }
 
 void Clock_display_operation() {
@@ -556,14 +588,6 @@ void Clock_display_operation() {
 
 	}
 
-//0.1, 0.01초 단위 7SEG 출력
-	if (millisecond / 100 > 5) { // 0.5초간 7SEG 깜박임
-		_7SEG_SetNumber(DGT2, second % 10, OFF);
-	} else {
-		_7SEG_SetNumber(DGT2, second % 10, ON);
-	}
-	_7SEG_SetNumber(DGT1, second / 10, OFF);
-
 }
 void Clock_button_operation() {
 	if (sw4_debounced == true) {
@@ -571,16 +595,24 @@ void Clock_button_operation() {
 		sw4_debounced = false;
 	}
 
-	if (sw2_debounced == true) {
+	if (sw2_debounced == true && !clock_setmode) {
 		buzzer = !buzzer;
 		sw2_debounced = false;
 	}
+
 	if (sw1_debounced) {
 		if (Press_Mode >= 2) {
 			clock_setmode = !clock_setmode; // Toggle timer setting mode
 			Press_Mode = 0;
+			Press_Time = 0;
 		}
 		sw1_debounced = false;
+	}
+
+	if (clock_setmode) {
+		if (clock_time % 1000 == 0) {
+			year++;
+		}
 	}
 }
 
@@ -777,6 +809,26 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) { //타이머 인터
 		if (sw1 == true && Press_Time <= 2510) { //스위치 누를때 press 시간 증가
 			Press_Time++;
 		}
+
+
+		if (Press_Mode == 1) {
+			if (clock_time % 500 == 0) {
+				year++;
+			}
+		} else if (Press_Mode == 2) {
+			if (clock_time % 100 == 0) {
+				year++;
+			}
+		} else if (Press_Mode == 3) {
+			if (clock_time % 20 == 0) {
+				year++;
+			}
+		}
+
+
+		if (sw2 == true && Press_Time <= 2510) { //스위치 누를때 press 시간 증가
+			Press_Time++;
+		}
 		if (timer_time > 0 && timer_time_tmp > 0) {
 			timer_time_tmp--;
 		}
@@ -806,6 +858,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) { //외부 인터럽트 호출
 						item_select = 0;
 					}
 				}
+				Press_Time = 0;
 			}
 		}
 	}
@@ -822,6 +875,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) { //외부 인터럽트 호출
 				sw2 = false;
 				HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
 				sw2_debounced = true;
+				Press_Time = 0;
 			}
 		}
 	}
