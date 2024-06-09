@@ -72,7 +72,7 @@ uint8_t mode = 1;
 bool mode_changed = false;
 
 //CLOCK 변수
-uint64_t clock_time = (11 * 60 * 60 + 59 * 60 + 50) * 1000;
+uint64_t clock_time = (23 * 60 * 60 + 59 * 60 + 50) * 1000;
 uint8_t hour;
 uint8_t minute;
 uint8_t second;
@@ -86,6 +86,7 @@ uint8_t month = 12;
 uint8_t day = 31;
 
 bool clock_setmode = false;
+uint8_t item_select = 0;
 
 //STOPWATCH 변수
 uint64_t stopwatch_time = 0;
@@ -455,16 +456,18 @@ void Clock_basic_operation() {
 }
 
 void Clock_display_operation() {
+	const char *period;
+	uint8_t displayHour = (int) hour % 12;
+	if (displayHour == 0) {
+		displayHour = 12; // 0시를 12시로 변환
+	}
+
 	if (!clock_setmode) {
 		if (changed == false) { // NOT AM/PM
 			sprintf(str, "   %02d %02d", (int) hour, (int) minute);
 			CLCD_Puts(8, 1, str);
 		} else { // AM/PM
-			uint8_t displayHour = (int) hour % 12;
-			if (displayHour == 0) {
-				displayHour = 12; // 0시를 12시로 변환
-			}
-			const char *period = (hour < 12) ? "AM" : "PM";
+			period = (hour < 12) ? "AM" : "PM";
 			sprintf(str, "%s %02d %02d", period, displayHour, (int) minute);
 			CLCD_Puts(8, 1, str);
 		}
@@ -478,9 +481,9 @@ void Clock_display_operation() {
 		}
 
 		if (buzzer == false) {
-			sprintf(str, "BZ OFF");
+			sprintf(str, "BZ OFF ");
 		} else {
-			sprintf(str, "BZ ON ");
+			sprintf(str, "BZ ON  ");
 		}
 		CLCD_Puts(0, 1, str);
 
@@ -490,28 +493,70 @@ void Clock_display_operation() {
 		sprintf(str, "TIME");
 		CLCD_Puts(0, 0, str);
 	} else {
+
 		if (millisecond / 100 > 5) {
-			/*sprintf(str, "      ");
-			 CLCD_Puts(10, 0, str);*/
-		} else {
-			/*if (buzzer == false) {
-			 sprintf(str, "BZ OFF");
-			 } else {
-			 sprintf(str, "BZ ON ");
-			 }
-			 CLCD_Puts(10, 0, str);*/
+
+			if (item_select == 0) {
+				sprintf(str, "%02d", (int) second);
+				CLCD_Puts(14, 1, str);
+				sprintf(str, "    ");
+				CLCD_Puts(6, 0, str);
+			}
+
+			else if (item_select == 1) {
+				sprintf(str, "%04d", (int) year);
+				CLCD_Puts(6, 0, str);
+				sprintf(str, "  ");
+				CLCD_Puts(11, 0, str);
+			}
+
+			else if (item_select == 2) {
+				sprintf(str, "%02d", (int) month);
+				CLCD_Puts(11, 0, str);
+				sprintf(str, "  ");
+				CLCD_Puts(14, 0, str);
+			}
+
+			else if (item_select == 3) {
+				sprintf(str, "%02d", (int) day);
+				CLCD_Puts(14, 0, str);
+				sprintf(str, "  ");
+				CLCD_Puts(8, 1, str);
+			}
+
+			else if (item_select == 4) {
+				sprintf(str, "%02d", displayHour);
+				CLCD_Puts(8, 1, str);
+				sprintf(str, "  ");
+				CLCD_Puts(11, 1, str);
+			}
+
+			else if (item_select == 5) {
+				sprintf(str, "%02d", (int) minute);
+				CLCD_Puts(11, 1, str);
+				sprintf(str, "  ");
+				CLCD_Puts(14, 1, str);
+			}
+			_7SEG_SetNumber(DGT2, second % 10, ON);
 		}
+
+		else {
+			sprintf(str, "%04d.%02d.%02d", (int) year, (int) month, (int) day);
+			CLCD_Puts(6, 0, str);
+			period = (hour < 12) ? "AM" : "PM";
+			sprintf(str, "SET  %s", period);
+			CLCD_Puts(0, 1, str);
+			sprintf(str, "%02d:%02d:%02d", displayHour, (int) minute,
+					(int) second);
+			CLCD_Puts(8, 1, str);
+			_7SEG_SetNumber(DGT2, second % 10, OFF);
+
+		}
+		_7SEG_SetNumber(DGT1, second / 10, OFF);
+
 	}
 
-	/*if (buzzer == false) {
-	 sprintf(str, "BZ OFF");
-	 CLCD_Puts(10, 0, str);
-	 } else {
-	 sprintf(str, "BZ ON ");
-	 CLCD_Puts(10, 0, str);
-	 }*/
-
-	//0.1, 0.01초 단위 7SEG 출력
+//0.1, 0.01초 단위 7SEG 출력
 	if (millisecond / 100 > 5) { // 0.5초간 7SEG 깜박임
 		_7SEG_SetNumber(DGT2, second % 10, OFF);
 	} else {
@@ -624,7 +669,7 @@ void Stopwatch_button_operation() {
 }
 
 void Timer_button_operation() {
-	// Enter timer setting mode on long press of button 1 (sw1)
+// Enter timer setting mode on long press of button 1 (sw1)
 	if (sw1_debounced) {
 		if (Press_Mode >= 2) {
 			timer_setmode = !timer_setmode; // Toggle timer setting mode
@@ -634,7 +679,7 @@ void Timer_button_operation() {
 		sw1_debounced = false;
 	}
 
-	// Setting mode adjustments
+// Setting mode adjustments
 	if (timer_setmode) {
 		// Adjusting the timer settings using buttons (assuming sw2 to increase hours, sw3 to increase minutes, sw4 to increase seconds)
 		if (sw2_debounced) {
@@ -674,7 +719,7 @@ void Timer_button_operation() {
 }
 
 void Timer_basic_operation() {
-	// If the timer is running, decrement the timer
+// If the timer is running, decrement the timer
 
 	if (timer_time == 0) {
 		if (timer_setmode) {
@@ -692,7 +737,7 @@ void Timer_basic_operation() {
 }
 
 void Timer_display_operation() {
-	// Display the timer settings or countdown based on mode
+// Display the timer settings or countdown based on mode
 	if (timer_setmode) {
 		sprintf(str, "SET     %02d:%02d:%02d",
 				(int) (timer_time_tmp / 1000) / 3600,
@@ -707,7 +752,7 @@ void Timer_display_operation() {
 	}
 	CLCD_Puts(0, 1, str);
 
-	//0.1, 0.01초 단위 7SEG 출력
+//0.1, 0.01초 단위 7SEG 출력
 
 	if (timer_time_tmp % 1000 / 100 > 5) { // 0.5초간 7SEG 깜박임
 		_7SEG_SetNumber(DGT1, timer_time_tmp % 1000 / 100, OFF);
@@ -755,6 +800,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) { //외부 인터럽트 호출
 					mode++;
 					mode_changed = true;
 				}
+				if (Press_Mode == 1 && clock_setmode) {
+					item_select++;
+					if (item_select == 6) {
+						item_select = 0;
+					}
+				}
 			}
 		}
 	}
@@ -764,6 +815,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) { //외부 인터럽트 호출
 			if (sw2 == false) {
 				sw2 = true;
 				HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
+				Press_Time = 0; // sw1이 눌릴 때 Press_Time 초기화
 			}
 		} else {
 			if (sw2 == true) {
@@ -780,6 +832,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) { //외부 인터럽트 호출
 				sw3 = true;
 				HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
 				sw3_debounced = true;
+				Press_Time = 0; // sw1이 눌릴 때 Press_Time 초기화
 			}
 		} else {
 			if (sw3 == true) {
@@ -794,6 +847,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) { //외부 인터럽트 호출
 			if (sw4 == false) {
 				sw4 = true;
 				HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
+				Press_Time = 0; // sw1이 눌릴 때 Press_Time 초기화
 			}
 		} else {
 			if (sw4 == true) {
