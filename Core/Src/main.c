@@ -72,7 +72,7 @@ uint8_t mode = 1;
 bool mode_changed = false;
 
 //CLOCK 변수
-uint64_t clock_time = (23 * 60 * 60 + 59 * 60 + 30) * 1000;
+uint64_t clock_time = (23 * 60 * 60 + 59 * 60 + 50) * 1000;
 uint8_t hour;
 uint8_t minute;
 uint8_t second;
@@ -80,6 +80,10 @@ uint16_t millisecond;
 bool changed = false;
 
 bool buzzer = false;
+
+uint16_t year = 2024;
+uint8_t month = 12;
+uint8_t day = 31;
 
 //STOPWATCH 변수
 uint64_t stopwatch_time = 0;
@@ -417,24 +421,58 @@ void Init_button_operation() {
 }
 
 void Clock_basic_operation() {
+	/*if (clock_time >= 86400000) { // 자정이 되면
+		clock_time = 0;
+		day++;*/
 
+		if ((month == 4 || month == 6 || month == 9 || month == 11)
+				&& day == 31) {
+			month++;
+			day = 1;
+		} else if ((month == 1 || month == 3 || month == 5 || month == 7
+				|| month == 8 || month == 10 || month == 12) && day == 32) {
+			if (month == 12) {
+				year++;
+				month = 1;
+			} else {
+				month++;
+			}
+			day = 1;
+		} else if (month == 2) {
+			if (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)) { // 윤년
+				if (day == 30) {
+					month++;
+					day = 1;
+				}
+			} else { // 평년
+				if (day == 29) {
+					month++;
+					day = 1;
+				}
+			}
+		}
+	//}
 }
+
 void Clock_display_operation() {
 	if (changed == false) { // NOT AM/PM
 		sprintf(str, "%02d:%02d   ", (int) hour, (int) minute);
 		CLCD_Puts(0, 0, str);
 	} else { // AM/PM
 		uint8_t displayHour = (int) hour % 12;
-		if (displayHour == 0)
+		if (displayHour == 0) {
 			displayHour = 12; // 0시를 12시로 변환
+		}
 		const char *period = (hour < 12) ? "AM" : "PM";
 		sprintf(str, "%02d:%02d %s", displayHour, (int) minute, period);
 		CLCD_Puts(0, 0, str);
 	}
 
-	sprintf(str, "%02d:%02d:%02d.%03d", (int) hour, (int) minute, (int) second,
-			(int) millisecond);
+	sprintf(str, "%04d.%02d.%02d", (int) year, (int) month, (int) day);
 	CLCD_Puts(0, 1, str);
+
+	sprintf(str, "%5d", (int) clock_time);
+	CLCD_Puts(11, 1, str);
 
 	if (buzzer == false) {
 		sprintf(str, "BZ OFF");
@@ -525,11 +563,12 @@ void Stopwatch_button_operation() {
 	if (lap_time_index != 0 && sw4_debounced == true) {
 		lap_time_click++;
 		if (lap_time_click <= lap_time_index) {
-			sprintf(str, "%1d/%1d %02d:%02d:%02d.%03d", lap_time_click, lap_time_index,
-								(int) (lap_time[lap_time_click] / 1000) / 3600,
-								(int) ((lap_time[lap_time_click] / 1000) / 60) % 60,
-								(int) (lap_time[lap_time_click] / 1000) % 60,
-								(int) lap_time[lap_time_click] % 1000);
+			sprintf(str, "%1d/%1d %02d:%02d:%02d.%03d", lap_time_click,
+					lap_time_index,
+					(int) (lap_time[lap_time_click] / 1000) / 3600,
+					(int) ((lap_time[lap_time_click] / 1000) / 60) % 60,
+					(int) (lap_time[lap_time_click] / 1000) % 60,
+					(int) lap_time[lap_time_click] % 1000);
 			CLCD_Puts(0, 1, str);
 			if (lap_time_click == lap_time_index) {
 				lap_time_click = 0;
@@ -646,10 +685,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) { //타이머 인터
 		time++; //총 시간 증가
 		clock_time++;
 
-		if (clock_time == 86400000) {
+		if (clock_time >= 86400000) {
 			clock_time = 0;
+			day++;
 		}
-
 		if (stopwatch_running == true) {
 			stopwatch_time++;
 		}
