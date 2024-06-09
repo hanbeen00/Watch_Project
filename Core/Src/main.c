@@ -72,7 +72,7 @@ uint8_t mode = 1;
 bool mode_changed = false;
 
 //CLOCK 변수
-uint64_t clock_time = (23 * 60 * 60 + 59 * 60 + 50) * 1000;
+uint64_t clock_time = (11 * 60 * 60 + 59 * 60 + 50) * 1000;
 uint8_t hour;
 uint8_t minute;
 uint8_t second;
@@ -84,6 +84,8 @@ bool buzzer = false;
 uint16_t year = 2024;
 uint8_t month = 12;
 uint8_t day = 31;
+
+bool clock_setmode = false;
 
 //STOPWATCH 변수
 uint64_t stopwatch_time = 0;
@@ -184,6 +186,7 @@ int main(void) {
 			Clock_basic_operation();
 			Clock_display_operation();
 			Clock_button_operation();
+			Init_button_operation();
 			break;
 		case 3:
 			Stopwatch_basic_operation();
@@ -422,35 +425,34 @@ void Init_button_operation() {
 
 void Clock_basic_operation() {
 	/*if (clock_time >= 86400000) { // 자정이 되면
-		clock_time = 0;
-		day++;*/
+	 clock_time = 0;
+	 day++;*/
 
-		if ((month == 4 || month == 6 || month == 9 || month == 11)
-				&& day == 31) {
+	if ((month == 4 || month == 6 || month == 9 || month == 11) && day == 31) {
+		month++;
+		day = 1;
+	} else if ((month == 1 || month == 3 || month == 5 || month == 7
+			|| month == 8 || month == 10 || month == 12) && day == 32) {
+		if (month == 12) {
+			year++;
+			month = 1;
+		} else {
 			month++;
-			day = 1;
-		} else if ((month == 1 || month == 3 || month == 5 || month == 7
-				|| month == 8 || month == 10 || month == 12) && day == 32) {
-			if (month == 12) {
-				year++;
-				month = 1;
-			} else {
+		}
+		day = 1;
+	} else if (month == 2) {
+		if (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)) { // 윤년
+			if (day == 30) {
 				month++;
+				day = 1;
 			}
-			day = 1;
-		} else if (month == 2) {
-			if (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)) { // 윤년
-				if (day == 30) {
-					month++;
-					day = 1;
-				}
-			} else { // 평년
-				if (day == 29) {
-					month++;
-					day = 1;
-				}
+		} else { // 평년
+			if (day == 29) {
+				month++;
+				day = 1;
 			}
 		}
+	}
 	//}
 }
 
@@ -474,13 +476,13 @@ void Clock_display_operation() {
 	sprintf(str, "%5d", (int) clock_time);
 	CLCD_Puts(11, 1, str);
 
-	if (buzzer == false) {
-		sprintf(str, "BZ OFF");
-		CLCD_Puts(10, 0, str);
-	} else {
-		sprintf(str, "BZ ON ");
-		CLCD_Puts(10, 0, str);
-	}
+	/*if (buzzer == false) {
+	 sprintf(str, "BZ OFF");
+	 CLCD_Puts(10, 0, str);
+	 } else {
+	 sprintf(str, "BZ ON ");
+	 CLCD_Puts(10, 0, str);
+	 }*/
 
 	//0.1, 0.01초 단위 7SEG 출력
 	if (millisecond / 100 > 5) { // 0.5초간 7SEG 깜박임
@@ -489,6 +491,20 @@ void Clock_display_operation() {
 		_7SEG_SetNumber(DGT2, second % 10, ON);
 	}
 	_7SEG_SetNumber(DGT1, second / 10, OFF);
+
+	if (clock_setmode) {
+		if (millisecond / 100 > 5) {
+			sprintf(str, "      ");
+			CLCD_Puts(10, 0, str);
+		} else {
+			if (buzzer == false) {
+				sprintf(str, "BZ OFF");
+			} else {
+				sprintf(str, "BZ ON ");
+			}
+			CLCD_Puts(10, 0, str);
+		}
+	}
 }
 void Clock_button_operation() {
 	if (sw4_debounced == true) {
@@ -499,6 +515,13 @@ void Clock_button_operation() {
 	if (sw2_debounced == true) {
 		buzzer = !buzzer;
 		sw2_debounced = false;
+	}
+	if (sw1_debounced) {
+		if (Press_Mode >= 2) {
+			clock_setmode = !clock_setmode; // Toggle timer setting mode
+			Press_Mode = 0;
+		}
+		sw1_debounced = false;
 	}
 }
 
