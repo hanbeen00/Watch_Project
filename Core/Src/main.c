@@ -395,8 +395,6 @@ void Init_basic_operation() {
 
 }
 void Init_display_operation() {
-	sprintf(str, "%6d", time / 1000); //1초 단위 LCD 출력
-	CLCD_Puts(10, 0, str);
 
 	//0.1, 0.01초 단위 7SEG 출력
 	if (time % 1000 / 100 > 5) { // 0.5초간 7SEG 깜박임
@@ -457,24 +455,53 @@ void Clock_basic_operation() {
 }
 
 void Clock_display_operation() {
-	if (changed == false) { // NOT AM/PM
-		sprintf(str, "%02d:%02d   ", (int) hour, (int) minute);
-		CLCD_Puts(0, 0, str);
-	} else { // AM/PM
-		uint8_t displayHour = (int) hour % 12;
-		if (displayHour == 0) {
-			displayHour = 12; // 0시를 12시로 변환
+	if (!clock_setmode) {
+		if (changed == false) { // NOT AM/PM
+			sprintf(str, "   %02d %02d", (int) hour, (int) minute);
+			CLCD_Puts(8, 1, str);
+		} else { // AM/PM
+			uint8_t displayHour = (int) hour % 12;
+			if (displayHour == 0) {
+				displayHour = 12; // 0시를 12시로 변환
+			}
+			const char *period = (hour < 12) ? "AM" : "PM";
+			sprintf(str, "%s %02d %02d", period, displayHour, (int) minute);
+			CLCD_Puts(8, 1, str);
 		}
-		const char *period = (hour < 12) ? "AM" : "PM";
-		sprintf(str, "%02d:%02d %s", displayHour, (int) minute, period);
+
+		if (millisecond / 100 > 5) {
+			sprintf(str, " ");
+			CLCD_Puts(13, 1, str);
+		} else {
+			sprintf(str, ":");
+			CLCD_Puts(13, 1, str);
+		}
+
+		if (buzzer == false) {
+			sprintf(str, "BZ OFF");
+		} else {
+			sprintf(str, "BZ ON ");
+		}
+		CLCD_Puts(0, 1, str);
+
+		sprintf(str, "%04d.%02d.%02d", (int) year, (int) month, (int) day);
+		CLCD_Puts(6, 0, str);
+
+		sprintf(str, "TIME");
 		CLCD_Puts(0, 0, str);
+	} else {
+		if (millisecond / 100 > 5) {
+			/*sprintf(str, "      ");
+			 CLCD_Puts(10, 0, str);*/
+		} else {
+			/*if (buzzer == false) {
+			 sprintf(str, "BZ OFF");
+			 } else {
+			 sprintf(str, "BZ ON ");
+			 }
+			 CLCD_Puts(10, 0, str);*/
+		}
 	}
-
-	sprintf(str, "%04d.%02d.%02d", (int) year, (int) month, (int) day);
-	CLCD_Puts(0, 1, str);
-
-	sprintf(str, "%5d", (int) clock_time);
-	CLCD_Puts(11, 1, str);
 
 	/*if (buzzer == false) {
 	 sprintf(str, "BZ OFF");
@@ -492,19 +519,6 @@ void Clock_display_operation() {
 	}
 	_7SEG_SetNumber(DGT1, second / 10, OFF);
 
-	if (clock_setmode) {
-		if (millisecond / 100 > 5) {
-			sprintf(str, "      ");
-			CLCD_Puts(10, 0, str);
-		} else {
-			if (buzzer == false) {
-				sprintf(str, "BZ OFF");
-			} else {
-				sprintf(str, "BZ ON ");
-			}
-			CLCD_Puts(10, 0, str);
-		}
-	}
 }
 void Clock_button_operation() {
 	if (sw4_debounced == true) {
@@ -737,7 +751,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) { //외부 인터럽트 호출
 				sw1 = false;
 				HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
 				sw1_debounced = true;
-				if (Press_Mode == 1) {
+				if (Press_Mode == 1 && !clock_setmode && !timer_setmode) {
 					mode++;
 					mode_changed = true;
 				}
