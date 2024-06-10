@@ -56,6 +56,7 @@ bool sw4 = false;
 
 bool sw1_debounced = false;
 bool sw2_debounced = false;
+bool sw3_debounced2 = false;
 bool sw3_debounced = false;
 bool sw4_debounced = false;
 
@@ -72,11 +73,12 @@ uint8_t mode = 1;
 bool mode_changed = false;
 
 //CLOCK 변수
-uint64_t clock_time = (23 * 60 * 60 + 59 * 60 + 50) * 1000;
-uint8_t hour;
-uint8_t minute;
-uint8_t second;
-uint16_t millisecond;
+//uint64_t clock_time = (23 * 60 * 60 + 59 * 60 + 50) * 1000;
+uint64_t clock_time = 0;
+uint8_t hour = 23;
+uint8_t minute = 59;
+uint8_t second = 10;
+uint16_t millisecond = 0;
 bool changed = false;
 
 bool buzzer = false;
@@ -168,11 +170,11 @@ int main(void) {
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
 	while (1) {
-		hour = clock_time / 1000 / 3600;
-		minute = (clock_time - hour * 1000 * 3600) / 1000 / 60;
-		second = (clock_time - hour * 1000 * 3600 - minute * 1000 * 60) / 1000;
-		millisecond = (clock_time - hour * 1000 * 3600 - minute * 1000 * 60
-				- second * 1000);
+		/*hour = clock_time / 1000 / 3600;
+		 minute = (clock_time - hour * 1000 * 3600) / 1000 / 60;
+		 second = (clock_time - hour * 1000 * 3600 - minute * 1000 * 60) / 1000;
+		 millisecond = (clock_time - hour * 1000 * 3600 - minute * 1000 * 60
+		 - second * 1000);*/
 
 		if (mode > 4)
 			mode = 1;
@@ -425,40 +427,58 @@ void Init_basic_operation() {
 		sprintf(str, "%5s", "long");
 		CLCD_Puts(10, 1, str);
 	}
-	sprintf(str, "%4d", Press_Time);
-	CLCD_Puts(0, 1, str);
 }
 void Init_display_operation() {
-
-	//0.1, 0.01초 단위 7SEG 출력
-	if (time % 1000 / 100 > 5) { // 0.5초간 7SEG 깜박임
-		_7SEG_SetNumber(DGT1, time % 1000 / 100, OFF);
-	} else {
-		_7SEG_SetNumber(DGT1, time % 1000 / 100, ON);
-	}
-	_7SEG_SetNumber(DGT2, time % 100 / 10, OFF);
 }
 void Init_button_operation() {
 	if (mode_changed == true) {
 		CLCD_Clear();
+		item_select = 0;
 		lap_time_click = 0;
 		mode_changed = false;
-		item_select = 0;
 	}
 
-	if (Press_Time == 0) {
+	if (Press_Time == 0) { // 안 누른 상태
 		Press_Mode = 0;
-	} else if (0 < Press_Time && Press_Time < 700) {
+	}
+
+	else if (0 < Press_Time && Press_Time < 700) { // 짧게 누른 상태
 		Press_Mode = 1;
-	} else if (700 <= Press_Time && Press_Time < 2500) {
+	}
+
+	else if (700 <= Press_Time && Press_Time < 2500) { // 중간 누른 상태
 		Press_Mode = 2;
-	} else if (2500 <= Press_Time) {
+	}
+
+	else if (2500 <= Press_Time) { // 길게 누른 상태
 		Press_Mode = 3;
 	}
 
 }
 
 void Clock_basic_operation() {
+
+	if (second == 60) {
+		second = 0;
+		minute++;
+	}
+
+	if (minute == 60) {
+		minute = 0;
+		hour++;
+	}
+
+
+	if (hour == 24) {
+		hour = 0;
+		day++;
+	}
+
+
+	if (month == 13) {
+		month = 1;
+		year++;
+	}
 
 	if ((month == 4 || month == 6 || month == 9 || month == 11) && day == 31) {
 		month++;
@@ -504,7 +524,7 @@ void Clock_display_operation() {
 			CLCD_Puts(8, 1, str);
 		}
 
-		if (millisecond / 100 > 5) {
+		if (clock_time / 100 > 5) {
 			sprintf(str, " ");
 			CLCD_Puts(13, 1, str);
 		} else {
@@ -524,9 +544,18 @@ void Clock_display_operation() {
 
 		sprintf(str, "TIME");
 		CLCD_Puts(0, 0, str);
+
+		if (clock_time / 100 > 5) {
+			_7SEG_SetNumber(DGT2, second % 10, ON);
+		}
+		else{
+			_7SEG_SetNumber(DGT2, second % 10, OFF);
+		}
+		_7SEG_SetNumber(DGT1, second / 10, OFF);
+
 	} else {
 
-		if (millisecond / 100 > 5) {
+		if (clock_time / 100 > 5) {
 
 			if (item_select == 0) {
 				sprintf(str, "%02d", (int) second);
@@ -609,11 +638,51 @@ void Clock_button_operation() {
 		sw1_debounced = false;
 	}
 
-	if (clock_setmode) {
-		if (clock_time % 1000 == 0) {
-			year++;
+	if (Press_Mode == 1 && sw2_debounced == true && clock_setmode) {
+		updateTime();
+		sw2_debounced = false;
+	}
+	if (sw2 == true && clock_setmode) {
+		if (Press_Mode == 2) {
+			if (time >= 500) {
+				updateTime();
+				time = 0;
+			}
+		} else if (Press_Mode == 3) {
+			if (time >= 200) {
+				updateTime();
+				time = 0;
+			}
 		}
 	}
+
+
+
+}
+
+void updateTime() {
+
+	switch (item_select) {
+	case 0:
+		year++;
+		break;
+	case 1:
+		month++;
+		break;
+	case 2:
+		day++;
+		break;
+	case 3:
+		hour++;
+		break;
+	case 4:
+		minute++;
+		break;
+	case 5:
+		second++;
+		break;
+	}
+
 }
 
 void Stopwatch_basic_operation() {
@@ -644,15 +713,15 @@ void Stopwatch_button_operation() {
 		sw2_debounced = false;
 	}
 
-	if (stopwatch_running == false && sw3_debounced == true) {
+	if (stopwatch_running == false && sw3_debounced2 == true) {
 		stopwatch_time = 0;
 		lap_time_index = 0;
 		sprintf(str, "%16s", ""); // 스톱워치 시간 1ms 단위 LCD 출력
 		CLCD_Puts(0, 1, str);
-		sw3_debounced = false;
+		sw3_debounced2 = false;
 	}
 
-	else if (stopwatch_running == true && sw3_debounced == true) {
+	else if (stopwatch_running == true && sw3_debounced2 == true) {
 		lap_time_click = 0;
 
 		if (lap_time_index < 9) {
@@ -671,7 +740,7 @@ void Stopwatch_button_operation() {
 			sprintf(str, "%16s", "LAP FULL(9/9)   "); // 스톱워치 시간 1ms 단위 LCD 출력
 			CLCD_Puts(0, 1, str);
 		}
-		sw3_debounced = false;
+		sw3_debounced2 = false;
 	}
 
 	if (lap_time_index != 0 && sw4_debounced == true) {
@@ -796,38 +865,26 @@ void Timer_display_operation() {
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) { //타이머 인터럽트 호출
 	if (htim->Instance == TIM7) { //1ms 마다 타이머 인터럽트
-		time++; //총 시간 증가
-		clock_time++;
+		time++; //실행 시간 증가
+		clock_time++; // 현재 시간 증가
 
-		if (clock_time >= 86400000) {
+		if (clock_time == 1000) {
+			second++;
 			clock_time = 0;
-			day++;
 		}
-		if (stopwatch_running == true) {
-			stopwatch_time++;
-		}
+
 		if (sw1 == true && Press_Time <= 2510) { //스위치 누를때 press 시간 증가
 			Press_Time++;
 		}
-
-
-		if (Press_Mode == 1) {
-			if (clock_time % 500 == 0) {
-				year++;
-			}
-		} else if (Press_Mode == 2) {
-			if (clock_time % 100 == 0) {
-				year++;
-			}
-		} else if (Press_Mode == 3) {
-			if (clock_time % 20 == 0) {
-				year++;
-			}
-		}
-
-
 		if (sw2 == true && Press_Time <= 2510) { //스위치 누를때 press 시간 증가
 			Press_Time++;
+		}
+		if (sw3 == true && Press_Time <= 2510) { //스위치 누를때 press 시간 증가
+			Press_Time++;
+		}
+
+		if (stopwatch_running == true) {
+			stopwatch_time++;
 		}
 		if (timer_time > 0 && timer_time_tmp > 0) {
 			timer_time_tmp--;
@@ -836,46 +893,48 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) { //타이머 인터
 }
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) { //외부 인터럽트 호출
 	if (GPIO_Pin == GPIO_PIN_3) {
-		if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_SET) {
-			if (sw1 == false) {
-				sw1 = true;
+		if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_SET) { // GPIOE 포트의 GPIO_PIN_3 핀이 현재 눌린 상태(높은 전압 상태)인지 확인
+			if (sw1 == false) { // 이전 상태는 눌리지 않은 상태
+				sw1 = true; // 이전 상태를 현재 상태로 업데이트(스위치가 눌렸음을 표시)
 				HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
 				Press_Time = 0; // sw1이 눌릴 때 Press_Time 초기화
 
 			}
-		} else {
-			if (sw1 == true) {
-				sw1 = false;
+		} else {	// GPIOE 포트의 GPIO_PIN_3 핀이 현재 떼진 상태(낮은 전압 상태)인지 확인
+			if (sw1 == true) {	// 이전 상태는 눌린 상태
+				sw1 = false; // 이전 상태를 현재 상태로 업데이트(스위치가 떼졌음을 표시)
 				HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
-				sw1_debounced = true;
-				if (Press_Mode == 1 && !clock_setmode && !timer_setmode) {
+				sw1_debounced = true; // sw1_debounced 변수를 true로 설정하여 디바운스 처리 완료 표시
+				Press_Time = 0;	// sw1이 떼질 때 Press_Time 초기화
+
+				if (Press_Mode == 1 && !clock_setmode && !timer_setmode) { //짧게 누르고 수정상태 아니면 모드 변경
 					mode++;
 					mode_changed = true;
 				}
-				if (Press_Mode == 1 && clock_setmode) {
+
+				if (Press_Mode == 1 && clock_setmode) { //짧게 누르고 수정상태이면 수정값 증가시키기
 					item_select++;
 					if (item_select == 6) {
 						item_select = 0;
 					}
 				}
-				Press_Time = 0;
 			}
 		}
 	}
 
 	else if (GPIO_Pin == GPIO_PIN_15) {
-		if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_15) == GPIO_PIN_SET) {
-			if (sw2 == false) {
-				sw2 = true;
+		if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_15) == GPIO_PIN_SET) { // GPIOC 포트의 GPIO_PIN_15 핀이 현재 눌린 상태(높은 전압 상태)인지 확인
+			if (sw2 == false) { 	// 이전 상태는 눌리지 않은 상태
+				sw2 = true; 	// 이전 상태를 현재 상태로 업데이트(스위치가 눌렸음을 표시)
 				HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
-				Press_Time = 0; // sw1이 눌릴 때 Press_Time 초기화
+				Press_Time = 0; 	// sw2이 눌릴 때 Press_Time 초기화
 			}
-		} else {
-			if (sw2 == true) {
-				sw2 = false;
+		} else { 	// GPIOC 포트의 GPIO_PIN_15 핀이 현재 떼진 상태(낮은 전압 상태)인지 확인
+			if (sw2 == true) { 	// 이전 상태는 눌린 상태
+				sw2 = false; 	// 이전 상태를 현재 상태로 업데이트(스위치가 떼졌음을 표시)
 				HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
-				sw2_debounced = true;
-				Press_Time = 0;
+				sw2_debounced = true; // sw2_debounced 변수를 true로 설정하여 디바운스 처리 완료 표시
+				Press_Time = 0; 	// sw1이 떼질 때 Press_Time 초기화
 			}
 		}
 	}
@@ -885,13 +944,15 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) { //외부 인터럽트 호출
 			if (sw3 == false) {
 				sw3 = true;
 				HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
-				sw3_debounced = true;
+				sw3_debounced2 = true;
 				Press_Time = 0; // sw1이 눌릴 때 Press_Time 초기화
 			}
 		} else {
 			if (sw3 == true) {
 				sw3 = false;
+				sw3_debounced = true;
 				HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
+				Press_Time = 0;
 			}
 		}
 	}
