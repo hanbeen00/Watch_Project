@@ -77,7 +77,7 @@ bool mode_changed = false;
 uint64_t clock_time = 0;
 uint8_t hour = 23;
 uint8_t minute = 59;
-uint8_t second = 10;
+uint8_t second = 50;
 uint16_t millisecond = 0;
 bool changed = false;
 
@@ -86,6 +86,8 @@ bool buzzer = false;
 uint16_t year = 2024;
 uint8_t month = 12;
 uint8_t day = 31;
+
+bool up = false;
 
 bool clock_setmode = false;
 uint8_t item_select = 0;
@@ -468,12 +470,10 @@ void Clock_basic_operation() {
 		hour++;
 	}
 
-
 	if (hour == 24) {
 		hour = 0;
 		day++;
 	}
-
 
 	if (month == 13) {
 		month = 1;
@@ -547,8 +547,7 @@ void Clock_display_operation() {
 
 		if (clock_time / 100 > 5) {
 			_7SEG_SetNumber(DGT2, second % 10, ON);
-		}
-		else{
+		} else {
 			_7SEG_SetNumber(DGT2, second % 10, OFF);
 		}
 		_7SEG_SetNumber(DGT1, second / 10, OFF);
@@ -642,6 +641,11 @@ void Clock_button_operation() {
 		updateTime();
 		sw2_debounced = false;
 	}
+	if (Press_Mode == 1 && sw3_debounced == true && clock_setmode) {
+		updateTime2();
+		sw3_debounced = false;
+	}
+
 	if (sw2 == true && clock_setmode) {
 		if (Press_Mode == 2) {
 			if (time >= 500) {
@@ -656,30 +660,153 @@ void Clock_button_operation() {
 		}
 	}
 
+	if (sw3 == true && clock_setmode) {
+		if (Press_Mode == 2) {
+			if (time >= 500) {
+				updateTime2();
+				time = 0;
+			}
+		} else if (Press_Mode == 3) {
+			if (time >= 200) {
+				updateTime2();
+				time = 0;
+			}
+		}
+	}
 
+}
 
+bool isLeapYear(uint16_t year) {
+	return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
 }
 
 void updateTime() {
 
 	switch (item_select) {
 	case 0:
-		year++;
+		if (year == 9999) {
+			year = 0;
+		} else {
+			year++;
+		}
 		break;
 	case 1:
-		month++;
+		if (month == 12) {
+			month = 1;
+		} else {
+			month++;
+		}
 		break;
 	case 2:
-		day++;
+		if (isLeapYear(year) && day == 29 && month == 2) {
+			day = 1;
+		}
+
+		else if (!isLeapYear(year) && day == 28 && month == 2) {
+			day = 1;
+		}
+
+		else if (day == 31
+				&& (month == 1 || month == 3 || month == 5 || month == 7
+						|| month == 8 || month == 10 || month == 12)) {
+			day = 1;
+		}
+
+		else if (day == 30
+				&& (month == 4 || month == 6 || month == 9 || month == 11)) {
+			day = 1;
+		}
+
+		else {
+			day++;
+		}
 		break;
 	case 3:
-		hour++;
+		if (hour == 23) {
+			hour = 0;
+		} else {
+			hour++;
+		}
 		break;
 	case 4:
-		minute++;
+		if (minute == 59) {
+			minute = 0;
+		} else {
+			minute++;
+		}
 		break;
 	case 5:
-		second++;
+		if (second == 59) {
+			second = 0;
+		} else {
+			second++;
+		}
+		break;
+	}
+
+}
+
+void updateTime2() {
+
+	switch (item_select) {
+	case 0:
+		if (year == 0) {
+			year = 0;
+		} else {
+			year--;
+		}
+		break;
+	case 1:
+		if (month == 1) {
+			month = 12;
+		} else {
+			month--;
+		}
+		break;
+	case 2:
+		if (isLeapYear(year) && day == 1 && month == 2) {
+			day = 29;
+		}
+
+		else if (!isLeapYear(year) && day == 1 && month == 2) {
+			day = 28;
+		}
+
+		else if (day == 1
+				&& (month == 1 || month == 3 || month == 5 || month == 7
+						|| month == 8 || month == 10 || month == 12)) {
+			day = 31;
+		}
+
+		else if (day == 1
+				&& (month == 4 || month == 6 || month == 9 || month == 11)) {
+			day = 30;
+		}
+
+		else {
+			day--;
+		}
+		break;
+	case 3:
+		if (hour == 0) {
+			hour = 23;
+		} else {
+			hour--;
+		}
+		break;
+	case 4:
+		if (minute == 0) {
+			minute = 59;
+		} else {
+			minute--;
+		}
+		break;
+	case 5:
+		if (second == 0) {
+			second = 59;
+		} else {
+			second--;
+		}
 		break;
 	}
 
