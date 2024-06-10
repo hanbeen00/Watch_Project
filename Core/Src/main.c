@@ -460,11 +460,6 @@ void Init_button_operation() {
 
 void Clock_basic_operation() {
 
-	if (second == 60) {
-		second = 0;
-		minute++;
-	}
-
 	if (minute == 60) {
 		minute = 0;
 		hour++;
@@ -997,6 +992,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) { //타이머 인터
 
 		if (clock_time == 1000) {
 			second++;
+			if (second == 60) {
+				second = 0;
+				minute++;
+			}
 			clock_time = 0;
 		}
 
@@ -1077,6 +1076,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) { //외부 인터럽트 호출
 		} else {
 			if (sw3 == true) {
 				sw3 = false;
+				sw3_debounced2 = false;
 				sw3_debounced = true;
 				HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
 				Press_Time = 0;
