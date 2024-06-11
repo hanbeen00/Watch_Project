@@ -443,18 +443,22 @@ void Init_button_operation() {
 	}
 
 	if (Press_Time == 0) { // 안 누른 상태
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14,GPIO_PIN_SET );
 		Press_Mode = 0;
 	}
 
 	else if (0 < Press_Time && Press_Time < 700) { // 짧게 누른 상태
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14,GPIO_PIN_RESET );
 		Press_Mode = 1;
 	}
 
 	else if (700 <= Press_Time && Press_Time < 2500) { // 중간 누른 상태
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14,GPIO_PIN_SET );
 		Press_Mode = 2;
 	}
 
 	else if (2500 <= Press_Time) { // 길게 누른 상태
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14,GPIO_PIN_RESET );
 		Press_Mode = 3;
 	}
 
@@ -627,19 +631,19 @@ void Clock_button_operation() {
 
 	if (clock_setmode) {
 		if (sw2_debounced == true) {
-			updateTime(item_select);
+			updateTime();
 			sw2_debounced = false;
 		}
 
 		if (sw2 == true) {
 			if (Press_Mode == 2) {
 				if (time >= 500) {
-					updateTime(item_select);
+					updateTime();
 					time = 0;
 				}
 			} else if (Press_Mode == 3) {
 				if (time >= 200) {
-					updateTime(item_select);
+					updateTime();
 					time = 0;
 				}
 			}
@@ -653,12 +657,12 @@ void Clock_button_operation() {
 		if (sw3 == true) {
 			if (Press_Mode == 2) {
 				if (time >= 500) {
-					updateTime2(item_select);
+					updateTime2();
 					time = 0;
 				}
 			} else if (Press_Mode == 3) {
 				if (time >= 200) {
-					updateTime2(item_select);
+					updateTime2();
 					time = 0;
 				}
 			}
@@ -1064,11 +1068,6 @@ void Timer_display_operation() {
 			CLCD_Puts(8, 1, str);
 
 		}
-
-		/*sprintf(str, "SET     %02d:%02d:%02d",
-		 (int) (timer_time_tmp / 1000) / 3600,
-		 (int) ((timer_time_tmp / 1000) / 60) % 60,
-		 (int) (timer_time_tmp / 1000) % 60);*/
 	}
 
 	else {
