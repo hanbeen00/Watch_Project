@@ -73,29 +73,28 @@ uint8_t mode = 1;
 bool mode_changed = false;
 
 //CLOCK 변수
-//uint64_t clock_time = (23 * 60 * 60 + 59 * 60 + 50) * 1000;
 uint64_t clock_time = 0;
 uint8_t hour = 23;
 uint8_t minute = 59;
 uint8_t second = 50;
 uint16_t millisecond = 0;
 bool changed = false;
-
 bool buzzer = false;
 
 uint16_t year = 2024;
 uint8_t month = 12;
 uint8_t day = 31;
 
-bool up = false;
-
 bool clock_setmode = false;
 uint8_t item_select = 0;
 
 //ALARM 변수
-uint8_t alarm_hour = 0;
-uint8_t alarm_minute = 0;
-uint8_t alarm_second = 0;
+bool alarm_setmode = false;
+bool alarm_changed[6] = { true, false, false, false, false, false };
+uint8_t alarm_select = 1;
+uint8_t alarm_hour[6] = { 0, };
+uint8_t alarm_minute[6] = { 0, };
+uint8_t item_select3 = 0;
 
 //STOPWATCH 변수
 uint64_t stopwatch_time = 0;
@@ -179,7 +178,7 @@ int main(void) {
 	/* USER CODE BEGIN WHILE */
 	while (1) {
 
-		if (mode > 4)
+		if (mode > 5)
 			mode = 1;
 
 		switch (mode) {
@@ -189,18 +188,24 @@ int main(void) {
 			Init_button_operation();
 			break;
 		case 2:
+			Alarm_basic_operation();
+			Alarm_display_operation();
+			Alarm_button_operation();
+			Init_button_operation();
+			break;
+		case 3:
 			Clock_basic_operation();
 			Clock_display_operation();
 			Clock_button_operation();
 			Init_button_operation();
 			break;
-		case 3:
+		case 4:
 			Stopwatch_basic_operation();
 			Stopwatch_display_operation();
 			Stopwatch_button_operation();
 			Init_button_operation();
 			break;
-		case 4:
+		case 5:
 			Timer_basic_operation();
 			Timer_display_operation();
 			Timer_button_operation();
@@ -401,7 +406,7 @@ void Init_basic_operation() {
 	sprintf(str, "%8d", time / 1000); //1초 단위 LCD 출력
 	CLCD_Puts(8, 0, str);
 
-	//0.1, 0.01초 단위 7SEG 출력
+//0.1, 0.01초 단위 7SEG 출력
 	if (time % 1000 / 100 > 5) { // 0.5초간 7SEG 깜박임
 		_7SEG_SetNumber(DGT1, time % 1000 / 100, OFF);
 	} else {
@@ -409,14 +414,14 @@ void Init_basic_operation() {
 	}
 	_7SEG_SetNumber(DGT2, time % 100 / 10, OFF);
 
-	//버튼 누른 시간 LCD 출력
+//버튼 누른 시간 LCD 출력
 	sprintf(str, "%4d", Press_Time);
 	CLCD_Puts(0, 1, str);
 
 	sprintf(str, "%4d", year);
 	CLCD_Puts(0, 0, str);
 
-	//버튼 PRESS 상태 출력
+//버튼 PRESS 상태 출력
 	if (Press_Time == 0) {
 		sprintf(str, "%5s", "no");
 		CLCD_Puts(10, 1, str);
@@ -440,41 +445,264 @@ void Init_button_operation() {
 		item_select2 = 0;
 		lap_time_click = 0;
 		mode_changed = false;
+
+		item_select3 = 0;
+		alarm_select = 1;
 	}
 
 	if (Press_Time == 0) { // 안 누른 상태
-		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14,GPIO_PIN_SET );
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14, GPIO_PIN_SET);
 		Press_Mode = 0;
 	}
 
 	else if (0 < Press_Time && Press_Time < 700) { // 짧게 누른 상태
-		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14,GPIO_PIN_RESET );
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14, GPIO_PIN_RESET);
 		Press_Mode = 1;
 	}
 
 	else if (700 <= Press_Time && Press_Time < 2500) { // 중간 누른 상태
-		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14,GPIO_PIN_SET );
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14, GPIO_PIN_SET);
 		Press_Mode = 2;
 	}
 
 	else if (2500 <= Press_Time) { // 길게 누른 상태
-		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14,GPIO_PIN_RESET );
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14, GPIO_PIN_RESET);
 		Press_Mode = 3;
 	}
 
 }
 
+Alarm_basic_operation() {
+	if (alarm_hour[alarm_select] >= 24) {
+		alarm_hour[alarm_select] = 0;
+	}
+
+	if (alarm_minute[alarm_select] >= 60) {
+		alarm_minute[alarm_select] = 0;
+		alarm_hour[alarm_select]++;
+	}
+
+}
+Alarm_display_operation() {
+
+	if (alarm_setmode) {
+		sprintf(str, "SET");
+		CLCD_Puts(0, 1, str);
+
+		if (clock_time / 100 > 5) {
+			if (item_select3 == 0) {
+				sprintf(str, "%02d", alarm_minute[alarm_select]);
+				CLCD_Puts(14, 1, str);
+				sprintf(str, " ");
+				CLCD_Puts(8, 0, str);
+			}
+
+			else if (item_select3 == 1) {
+				sprintf(str, "%d", alarm_select);
+				CLCD_Puts(8, 0, str);
+				sprintf(str, "   ");
+				CLCD_Puts(13, 0, str);
+			}
+
+			else if (item_select3 == 2) {
+				if (alarm_changed[alarm_select]) {
+					sprintf(str, " ON");
+				} else {
+					sprintf(str, "OFF");
+				}
+				CLCD_Puts(13, 0, str);
+				sprintf(str, "  ");
+				CLCD_Puts(11, 1, str);
+			}
+
+			else if (item_select3 == 3) {
+				sprintf(str, "%02d", alarm_hour[alarm_select]);
+				CLCD_Puts(11, 1, str);
+				sprintf(str, "  ");
+				CLCD_Puts(14, 1, str);
+			}
+		}
+
+		else {
+			sprintf(str, "ALARM  #%d", alarm_select);
+			CLCD_Puts(0, 0, str);
+
+			sprintf(str, "%s  ", (alarm_hour[alarm_select] < 12) ? "AM" : "PM");
+			CLCD_Puts(7, 1, str);
+
+			sprintf(str, "%02d:%02d", alarm_hour[alarm_select],
+					alarm_minute[alarm_select]);
+			CLCD_Puts(11, 1, str);
+
+			if (alarm_changed[alarm_select]) {
+				sprintf(str, " ON");
+				CLCD_Puts(13, 0, str);
+			}
+
+			else {
+				sprintf(str, "OFF");
+				CLCD_Puts(13, 0, str);
+			}
+
+		}
+	}
+
+	else {
+		sprintf(str, "   ");
+		CLCD_Puts(0, 1, str);
+
+		sprintf(str, "ALARM  #%d", alarm_select);
+		CLCD_Puts(0, 0, str);
+
+		sprintf(str, "%s  ", (alarm_hour[alarm_select] < 12) ? "AM" : "PM");
+		CLCD_Puts(7, 1, str);
+
+		sprintf(str, "%02d:%02d", alarm_hour[alarm_select],
+				alarm_minute[alarm_select]);
+		CLCD_Puts(11, 1, str);
+
+		if (alarm_changed[alarm_select]) {
+			sprintf(str, " ON");
+			CLCD_Puts(13, 0, str);
+		}
+
+		else {
+			sprintf(str, "OFF");
+			CLCD_Puts(13, 0, str);
+		}
+	}
+
+}
+Alarm_button_operation() {
+	if (sw1_debounced) {
+		if (Press_Mode >= 2) {
+			alarm_setmode = !alarm_setmode; // Toggle timer setting mode
+			Press_Mode = 0;
+		}
+		sw1_debounced = false;
+	}
+
+	if (alarm_setmode) {
+		if (sw2_debounced) {
+			updateTime5();
+			sw2_debounced = false;
+		}
+		if (sw2 == true) {
+			if (Press_Mode == 2) {
+				if (time >= 500) {
+					updateTime5();
+					time = 0;
+				}
+			} else if (Press_Mode == 3) {
+				if (time >= 200) {
+					updateTime5();
+					time = 0;
+				}
+			}
+		}
+
+		if (sw3_debounced) {
+			updateTime6();
+			sw3_debounced = false;
+		}
+		if (sw3 == true) {
+			if (Press_Mode == 2) {
+				if (time >= 500) {
+					updateTime6();
+					time = 0;
+				}
+			} else if (Press_Mode == 3) {
+				if (time >= 200) {
+					updateTime6();
+					time = 0;
+				}
+			}
+		}
+	}
+
+	else {
+		if (sw2_debounced) {
+			alarm_select++;
+			if (alarm_select >= 6) {
+				alarm_select = 1;
+			}
+			sw2_debounced = false;
+		}
+	}
+}
+void updateTime5() {
+	switch (item_select3) {
+	case 0:
+		alarm_select++;
+		if (alarm_select >= 6) {
+			alarm_select = 1;
+		}
+		break;
+	case 1:
+		alarm_changed[alarm_select] = !alarm_changed[alarm_select];
+		if (alarm_changed[alarm_select]) {
+			alarm_hour[alarm_select] = hour;
+			alarm_minute[alarm_select] = minute;
+		}
+
+		break;
+	case 2:
+		if (alarm_hour[alarm_select] >= 23) {
+			alarm_hour[alarm_select] = 0;
+		}
+
+		else {
+			alarm_hour[alarm_select]++;
+		}
+		break;
+	case 3:
+		if (alarm_minute[alarm_select] >= 59) {
+			alarm_minute[alarm_select] = 0;
+		}
+
+		else {
+			alarm_minute[alarm_select]++;
+		}
+		break;
+	}
+}
+
+void updateTime6() {
+	switch (item_select3) {
+	case 0:
+		alarm_select--;
+		if (alarm_select <= 0) {
+			alarm_select = 5;
+		}
+		break;
+	case 1:
+		alarm_changed[alarm_select] = !alarm_changed[alarm_select];
+		if (alarm_changed[alarm_select]) {
+			alarm_hour[alarm_select] = hour;
+			alarm_minute[alarm_select] = minute;
+		}
+		break;
+	case 2:
+		if (alarm_hour[alarm_select] <= 0) {
+			alarm_hour[alarm_select] = 23;
+		}
+
+		else {
+			alarm_hour[alarm_select]--;
+		}
+		break;
+	case 3:
+		if (alarm_minute[alarm_select] <= 0) {
+			alarm_minute[alarm_select] = 59;
+		}
+
+		else {
+			alarm_minute[alarm_select]--;
+		}
+		break;
+	}
+}
 void Clock_basic_operation() {
-
-	if (minute >= 60) {
-		minute = 0;
-		hour++;
-	}
-
-	if (hour >= 24) {
-		hour = 0;
-		day++;
-	}
 
 	if (month >= 13) {
 		month = 1;
@@ -1060,8 +1288,7 @@ void Timer_display_operation() {
 		}
 
 		else {
-			sprintf(str, "%02d:%02d:%02d",
-					(int) (timer_time_tmp / 1000) / 3600,
+			sprintf(str, "%02d:%02d:%02d", (int) (timer_time_tmp / 1000) / 3600,
 					(int) ((timer_time_tmp / 1000) / 60) % 60,
 					(int) (timer_time_tmp / 1000) % 60,
 					(int) timer_time_tmp % 1000);
@@ -1119,6 +1346,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) { //타이머 인터
 		if (timer_time > 0 && timer_time_tmp > 0) {
 			timer_time_tmp--;
 		}
+
+		if (minute >= 60) {
+			minute = 0;
+			hour++;
+		}
+
+		if (hour >= 24) {
+			hour = 0;
+			day++;
+		}
 	}
 }
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) { //외부 인터럽트 호출
@@ -1137,7 +1374,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) { //외부 인터럽트 호출
 				sw1_debounced = true; // sw1_debounced 변수를 true로 설정하여 디바운스 처리 완료 표시
 				Press_Time = 0;	// sw1이 떼질 때 Press_Time 초기화
 
-				if (Press_Mode == 1 && !clock_setmode && !timer_setmode) { //짧게 누르고 수정상태 아니면 모드 변경
+				if (Press_Mode == 1 && !clock_setmode && !timer_setmode
+						&& !alarm_setmode) { //짧게 누르고 수정상태 아니면 모드 변경
 					mode++;
 					mode_changed = true;
 				}
@@ -1153,6 +1391,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) { //외부 인터럽트 호출
 					item_select2++;
 					if (item_select2 == 3) {
 						item_select2 = 0;
+					}
+				}
+
+				if (Press_Mode == 1 && alarm_setmode) { //짧게 누르고 수정상태이면 수정값 증가시키기
+					item_select3++;
+					if (item_select3 == 4) {
+						item_select3 = 0;
 					}
 				}
 			}
