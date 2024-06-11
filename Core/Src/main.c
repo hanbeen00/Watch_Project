@@ -93,9 +93,9 @@ bool clock_setmode = false;
 uint8_t item_select = 0;
 
 //ALARM 변수
-uint8_t alarm_hour = 23;
-uint8_t alarm_minute = 59;
-uint8_t alarm_second = 50;
+uint8_t alarm_hour = 0;
+uint8_t alarm_minute = 0;
+uint8_t alarm_second = 0;
 
 //STOPWATCH 변수
 uint64_t stopwatch_time = 0;
@@ -511,46 +511,7 @@ void Clock_display_operation() {
 		displayHour = 12; // 0시를 12시로 변환
 	}
 
-	if (!clock_setmode) {
-		if (changed == false) { // NOT AM/PM
-			sprintf(str, "   %02d %02d", (int) hour, (int) minute);
-			CLCD_Puts(8, 1, str);
-		} else { // AM/PM
-			period = (hour < 12) ? "AM" : "PM";
-			sprintf(str, "%s %02d %02d", period, displayHour, (int) minute);
-			CLCD_Puts(8, 1, str);
-		}
-
-		if (clock_time / 100 > 5) {
-			sprintf(str, " ");
-			CLCD_Puts(13, 1, str);
-		} else {
-			sprintf(str, ":");
-			CLCD_Puts(13, 1, str);
-		}
-
-		if (buzzer == false) {
-			sprintf(str, "BZ OFF ");
-		} else {
-			sprintf(str, "BZ ON  ");
-		}
-		CLCD_Puts(0, 1, str);
-
-		sprintf(str, "%04d.%02d.%02d", (int) year, (int) month, (int) day);
-		CLCD_Puts(6, 0, str);
-
-		sprintf(str, "TIME");
-		CLCD_Puts(0, 0, str);
-
-		if (clock_time / 100 > 5) {
-			_7SEG_SetNumber(DGT2, second % 10, ON);
-		} else {
-			_7SEG_SetNumber(DGT2, second % 10, OFF);
-		}
-		_7SEG_SetNumber(DGT1, second / 10, OFF);
-
-	} else {
-
+	if (clock_setmode) {
 		if (clock_time / 100 > 5) {
 
 			if (item_select == 0) {
@@ -610,65 +571,113 @@ void Clock_display_operation() {
 
 		}
 		_7SEG_SetNumber(DGT1, second / 10, OFF);
+	}
 
+	else {
+
+		if (clock_time / 100 > 5) {
+			sprintf(str, " ");
+			CLCD_Puts(13, 1, str);
+		} else {
+			sprintf(str, ":");
+			CLCD_Puts(13, 1, str);
+		}
+
+		if (clock_time / 100 > 5) {
+			_7SEG_SetNumber(DGT2, second % 10, ON);
+		} else {
+			_7SEG_SetNumber(DGT2, second % 10, OFF);
+		}
+		_7SEG_SetNumber(DGT1, second / 10, OFF);
+
+		if (buzzer == false) {
+			sprintf(str, "BZ OFF ");
+		} else {
+			sprintf(str, "BZ ON  ");
+		}
+		CLCD_Puts(0, 1, str);
+
+		sprintf(str, "%04d.%02d.%02d", (int) year, (int) month, (int) day);
+		CLCD_Puts(6, 0, str);
+
+		sprintf(str, "TIME");
+		CLCD_Puts(0, 0, str);
+
+		if (changed == false) { // NOT AM/PM
+			sprintf(str, "   %02d %02d", (int) hour, (int) minute);
+			CLCD_Puts(8, 1, str);
+		}
+
+		else { // AM/PM
+			period = (hour < 12) ? "AM" : "PM";
+			sprintf(str, "%s %02d %02d", period, displayHour, (int) minute);
+			CLCD_Puts(8, 1, str);
+		}
 	}
 
 }
 void Clock_button_operation() {
-	if (sw4_debounced == true) {
-		changed = !changed;
-		sw4_debounced = false;
-	}
-
-	if (sw2_debounced == true && !clock_setmode) {
-		buzzer = !buzzer;
-		sw2_debounced = false;
-	}
-
 	if (sw1_debounced) {
 		if (Press_Mode >= 2) {
 			clock_setmode = !clock_setmode; // Toggle timer setting mode
 			Press_Mode = 0;
-			Press_Time = 0;
 		}
 		sw1_debounced = false;
 	}
 
-	if (Press_Mode == 1 && sw2_debounced == true && clock_setmode) {
-		updateTime();
-		sw2_debounced = false;
-	}
-	if (Press_Mode == 1 && sw3_debounced == true && clock_setmode) {
-		updateTime2();
-		sw3_debounced = false;
-	}
+	if (clock_setmode) {
+		if (sw2_debounced == true) {
+			updateTime(item_select);
+			sw2_debounced = false;
+		}
 
-	if (sw2 == true && clock_setmode) {
-		if (Press_Mode == 2) {
-			if (time >= 500) {
-				updateTime();
-				time = 0;
-			}
-		} else if (Press_Mode == 3) {
-			if (time >= 200) {
-				updateTime();
-				time = 0;
+		if (sw2 == true) {
+			if (Press_Mode == 2) {
+				if (time >= 500) {
+					updateTime(item_select);
+					time = 0;
+				}
+			} else if (Press_Mode == 3) {
+				if (time >= 200) {
+					updateTime(item_select);
+					time = 0;
+				}
 			}
 		}
-	}
 
-	if (sw3 == true && clock_setmode) {
-		if (Press_Mode == 2) {
-			if (time >= 500) {
-				updateTime2();
-				time = 0;
-			}
-		} else if (Press_Mode == 3) {
-			if (time >= 200) {
-				updateTime2();
-				time = 0;
+		if (sw3_debounced == true) {
+			updateTime2(item_select);
+			sw3_debounced = false;
+		}
+
+		if (sw3 == true) {
+			if (Press_Mode == 2) {
+				if (time >= 500) {
+					updateTime2(item_select);
+					time = 0;
+				}
+			} else if (Press_Mode == 3) {
+				if (time >= 200) {
+					updateTime2(item_select);
+					time = 0;
+				}
 			}
 		}
+	} else {
+		if (sw4_debounced == true) {
+			changed = !changed;
+			sw4_debounced = false;
+		}
+
+		if (sw2_debounced == true && !clock_setmode) {
+			buzzer = !buzzer;
+			sw2_debounced = false;
+		}
+
+		if (sw3_debounced) {
+			sw3_debounced = false;
+		}
+
 	}
 
 }
@@ -678,7 +687,6 @@ bool isLeapYear(uint16_t year) {
 }
 
 void updateTime() {
-
 	switch (item_select) {
 	case 0:
 		if (year == 9999) {
@@ -973,6 +981,7 @@ void updateTime3() {
 	switch (item_select2) {
 	case 0:
 		timer_time_tmp += 3600000; // Increase hours
+		year++;
 		break;
 	case 1:
 		timer_time_tmp += 60000;
@@ -1022,9 +1031,9 @@ void Timer_basic_operation() {
 void Timer_display_operation() {
 // Display the timer settings or countdown based on mode
 	if (timer_setmode) {
-		sprintf(str, "SET     %02d:%02d:%02d",
-				(int) (timer_time_tmp / 1000) / 3600,
-				(int) ((timer_time_tmp / 1000) / 60) % 60,
+		sprintf(str, "SET     %d:%02d:%02d",
+				//(int) (timer_time_tmp / 1000) / 3600,
+				year, (int) ((timer_time_tmp / 1000) / 60) % 60,
 				(int) (timer_time_tmp / 1000) % 60);
 	} else {
 		sprintf(str, "    %02d:%02d:%02d.%03d",
