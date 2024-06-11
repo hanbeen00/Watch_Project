@@ -92,6 +92,11 @@ bool up = false;
 bool clock_setmode = false;
 uint8_t item_select = 0;
 
+//ALARM 변수
+uint8_t alarm_hour = 23;
+uint8_t alarm_minute = 59;
+uint8_t alarm_second = 50;
+
 //STOPWATCH 변수
 uint64_t stopwatch_time = 0;
 uint64_t lap_time[10] = { 0, };
@@ -103,6 +108,7 @@ bool stopwatch_running = false;  // 스톱워치 실행 여부를 나타내는 �
 uint64_t timer_time = 0;
 uint64_t timer_time_tmp = 0;
 bool timer_setmode = false;
+uint8_t item_select2 = 0;
 
 /* USER CODE END PV */
 
@@ -172,11 +178,6 @@ int main(void) {
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
 	while (1) {
-		/*hour = clock_time / 1000 / 3600;
-		 minute = (clock_time - hour * 1000 * 3600) / 1000 / 60;
-		 second = (clock_time - hour * 1000 * 3600 - minute * 1000 * 60) / 1000;
-		 millisecond = (clock_time - hour * 1000 * 3600 - minute * 1000 * 60
-		 - second * 1000);*/
 
 		if (mode > 4)
 			mode = 1;
@@ -436,6 +437,7 @@ void Init_button_operation() {
 	if (mode_changed == true) {
 		CLCD_Clear();
 		item_select = 0;
+		item_select2 = 0;
 		lap_time_click = 0;
 		mode_changed = false;
 	}
@@ -906,17 +908,43 @@ void Timer_button_operation() {
 	if (timer_setmode) {
 		// Adjusting the timer settings using buttons (assuming sw2 to increase hours, sw3 to increase minutes, sw4 to increase seconds)
 		if (sw2_debounced) {
-			timer_time_tmp += 3600000; // Increase hours
+			updateTime3(item_select2);
 			sw2_debounced = false;
 		}
+
+		if (sw2 == true) {
+			if (Press_Mode == 2) {
+				if (time >= 500) {
+					updateTime3(item_select2);
+					time = 0;
+				}
+			} else if (Press_Mode == 3) {
+				if (time >= 200) {
+					updateTime3(item_select2);
+					time = 0;
+				}
+			}
+		}
+
 		if (sw3_debounced) {
-			timer_time_tmp += 60000; // Increase minutes
+			updateTime4(item_select2);
 			sw3_debounced = false;
 		}
-		if (sw4_debounced) {
-			timer_time_tmp += 1000; // Increase seconds
-			sw4_debounced = false;
+
+		if (sw3 == true) {
+			if (Press_Mode == 2) {
+				if (time >= 500) {
+					updateTime4(item_select2);
+					time = 0;
+				}
+			} else if (Press_Mode == 3) {
+				if (time >= 200) {
+					updateTime4(item_select2);
+					time = 0;
+				}
+			}
 		}
+
 	} else {
 		// Starting/Stopping the timer using button 2 (sw2)
 		if (sw2_debounced) {
@@ -941,6 +969,38 @@ void Timer_button_operation() {
 	}
 }
 
+void updateTime3() {
+	switch (item_select2) {
+	case 0:
+		timer_time_tmp += 3600000; // Increase hours
+		break;
+	case 1:
+		timer_time_tmp += 60000;
+		break;
+	case 2:
+		timer_time_tmp += 1000;
+		break;
+	}
+}
+void updateTime4() {
+	switch (item_select2) {
+	case 0:
+		if (timer_time_tmp >= 3600000) {
+			timer_time_tmp -= 3600000; // Increase hours
+		}
+		break;
+	case 1:
+		if (timer_time_tmp >= 60000) {
+			timer_time_tmp -= 60000; // Increase hours
+		}
+		break;
+	case 2:
+		if (timer_time_tmp >= 1000) {
+			timer_time_tmp -= 1000; // Increase hours
+		}
+		break;
+	}
+}
 void Timer_basic_operation() {
 // If the timer is running, decrement the timer
 
@@ -1042,6 +1102,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) { //외부 인터럽트 호출
 					item_select++;
 					if (item_select == 6) {
 						item_select = 0;
+					}
+				}
+
+				if (Press_Mode == 1 && timer_setmode) { //짧게 누르고 수정상태이면 수정값 증가시키기
+					item_select2++;
+					if (item_select2 == 3) {
+						item_select2 = 0;
 					}
 				}
 			}
