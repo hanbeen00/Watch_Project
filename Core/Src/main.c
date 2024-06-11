@@ -462,27 +462,27 @@ void Init_button_operation() {
 
 void Clock_basic_operation() {
 
-	if (minute == 60) {
+	if (minute >= 60) {
 		minute = 0;
 		hour++;
 	}
 
-	if (hour == 24) {
+	if (hour >= 24) {
 		hour = 0;
 		day++;
 	}
 
-	if (month == 13) {
+	if (month >= 13) {
 		month = 1;
 		year++;
 	}
 
-	if ((month == 4 || month == 6 || month == 9 || month == 11) && day == 31) {
+	if ((month == 4 || month == 6 || month == 9 || month == 11) && day >= 31) {
 		month++;
 		day = 1;
 	} else if ((month == 1 || month == 3 || month == 5 || month == 7
-			|| month == 8 || month == 10 || month == 12) && day == 32) {
-		if (month == 12) {
+			|| month == 8 || month == 10 || month == 12) && day >= 32) {
+		if (month >= 12) {
 			year++;
 			month = 1;
 		} else {
@@ -491,12 +491,12 @@ void Clock_basic_operation() {
 		day = 1;
 	} else if (month == 2) {
 		if (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)) { // 윤년
-			if (day == 30) {
+			if (day >= 30) {
 				month++;
 				day = 1;
 			}
 		} else { // 평년
-			if (day == 29) {
+			if (day >= 29) {
 				month++;
 				day = 1;
 			}
@@ -981,7 +981,6 @@ void updateTime3() {
 	switch (item_select2) {
 	case 0:
 		timer_time_tmp += 3600000; // Increase hours
-		year++;
 		break;
 	case 1:
 		timer_time_tmp += 60000;
@@ -1031,9 +1030,9 @@ void Timer_basic_operation() {
 void Timer_display_operation() {
 // Display the timer settings or countdown based on mode
 	if (timer_setmode) {
-		sprintf(str, "SET     %d:%02d:%02d",
-				//(int) (timer_time_tmp / 1000) / 3600,
-				year, (int) ((timer_time_tmp / 1000) / 60) % 60,
+		sprintf(str, "SET     %02d:%02d:%02d",
+				(int) (timer_time_tmp / 1000) / 3600,
+				(int) ((timer_time_tmp / 1000) / 60) % 60,
 				(int) (timer_time_tmp / 1000) % 60);
 	} else {
 		sprintf(str, "    %02d:%02d:%02d.%03d",
