@@ -905,6 +905,7 @@ void Timer_button_operation() {
 // Enter timer setting mode on long press of button 1 (sw1)
 	if (sw1_debounced) {
 		if (Press_Mode >= 2) {
+			CLCD_Clear();
 			timer_setmode = !timer_setmode; // Toggle timer setting mode
 			timer_time = 0;
 			Press_Mode = 0;
@@ -1030,18 +1031,54 @@ void Timer_basic_operation() {
 void Timer_display_operation() {
 // Display the timer settings or countdown based on mode
 	if (timer_setmode) {
-		sprintf(str, "SET     %02d:%02d:%02d",
-				(int) (timer_time_tmp / 1000) / 3600,
-				(int) ((timer_time_tmp / 1000) / 60) % 60,
-				(int) (timer_time_tmp / 1000) % 60);
-	} else {
+
+		if (clock_time / 100 > 5) {
+			if (item_select2 == 0) {
+				sprintf(str, "%02d", (int) (timer_time_tmp / 1000) % 60);
+				CLCD_Puts(14, 1, str);
+				sprintf(str, "  ");
+				CLCD_Puts(8, 1, str);
+			}
+
+			else if (item_select2 == 1) {
+				sprintf(str, "%02d", (int) (timer_time_tmp / 1000) / 3600);
+				CLCD_Puts(8, 1, str);
+				sprintf(str, "  ");
+				CLCD_Puts(11, 1, str);
+			}
+
+			else if (item_select2 == 2) {
+				sprintf(str, "%02d", (int) ((timer_time_tmp / 1000) / 60) % 60);
+				CLCD_Puts(11, 1, str);
+				sprintf(str, "  ");
+				CLCD_Puts(14, 1, str);
+			}
+		}
+
+		else {
+			sprintf(str, "%02d:%02d:%02d",
+					(int) (timer_time_tmp / 1000) / 3600,
+					(int) ((timer_time_tmp / 1000) / 60) % 60,
+					(int) (timer_time_tmp / 1000) % 60,
+					(int) timer_time_tmp % 1000);
+			CLCD_Puts(8, 1, str);
+
+		}
+
+		/*sprintf(str, "SET     %02d:%02d:%02d",
+		 (int) (timer_time_tmp / 1000) / 3600,
+		 (int) ((timer_time_tmp / 1000) / 60) % 60,
+		 (int) (timer_time_tmp / 1000) % 60);*/
+	}
+
+	else {
 		sprintf(str, "    %02d:%02d:%02d.%03d",
 				(int) (timer_time_tmp / 1000) / 3600,
 				(int) ((timer_time_tmp / 1000) / 60) % 60,
 				(int) (timer_time_tmp / 1000) % 60,
 				(int) timer_time_tmp % 1000);
+		CLCD_Puts(0, 1, str);
 	}
-	CLCD_Puts(0, 1, str);
 
 //0.1, 0.01초 단위 7SEG 출력
 
