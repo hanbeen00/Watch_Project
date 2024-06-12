@@ -74,16 +74,16 @@ bool mode_changed = false;
 
 //CLOCK 변수
 uint64_t clock_time = 0;
-uint8_t hour = 15;
-uint8_t minute = 31;
-uint8_t second = 12;
+uint8_t hour = 23;
+uint8_t minute = 59;
+uint8_t second = 50;
 uint16_t millisecond = 0;
 bool changed = false;
 bool buzzer = false;
 
-uint16_t year = 2023;
+uint16_t year = 2024;
 uint8_t month = 12;
-uint8_t day = 12;
+uint8_t day = 31;
 
 bool clock_setmode = false;
 uint8_t item_select = 0;
@@ -537,6 +537,11 @@ Alarm_basic_operation() {
 }
 Alarm_display_operation() {
 
+	uint8_t displayHour = (int) alarm_hour[alarm_select] % 12;
+	if (displayHour == 0) {
+		displayHour = 12; // 0시를 12시로 변환
+	}
+
 	if (alarm_setmode) {
 		sprintf(str, "SET");
 		CLCD_Puts(0, 1, str);
@@ -568,7 +573,7 @@ Alarm_display_operation() {
 			}
 
 			else if (item_select3 == 3) {
-				sprintf(str, "%02d", alarm_hour[alarm_select]);
+				sprintf(str, "%02d", displayHour);
 				CLCD_Puts(11, 1, str);
 				sprintf(str, "  ");
 				CLCD_Puts(14, 1, str);
@@ -582,8 +587,7 @@ Alarm_display_operation() {
 			sprintf(str, "%s  ", (alarm_hour[alarm_select] < 12) ? "AM" : "PM");
 			CLCD_Puts(7, 1, str);
 
-			sprintf(str, "%02d:%02d", alarm_hour[alarm_select],
-					alarm_minute[alarm_select]);
+			sprintf(str, "%02d:%02d", displayHour, alarm_minute[alarm_select]);
 			CLCD_Puts(11, 1, str);
 
 			if (alarm_changed[alarm_select]) {
@@ -623,6 +627,13 @@ Alarm_display_operation() {
 			CLCD_Puts(13, 0, str);
 		}
 	}
+
+	if (clock_time / 100 > 5) {
+		_7SEG_SetNumber(DGT2, second % 10, ON);
+	} else {
+		_7SEG_SetNumber(DGT2, second % 10, OFF);
+	}
+	_7SEG_SetNumber(DGT1, second / 10, OFF);
 
 }
 Alarm_button_operation() {
