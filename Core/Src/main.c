@@ -95,6 +95,7 @@ uint8_t alarm_select = 1;
 uint8_t alarm_hour[6] = { 0, };
 uint8_t alarm_minute[6] = { 0, };
 uint8_t item_select3 = 0;
+bool alarm_ring = false;
 
 //STOPWATCH 변수
 uint64_t stopwatch_time = 0;
@@ -181,6 +182,45 @@ int main(void) {
 		if (mode > 5)
 			mode = 1;
 
+		if (alarm_changed[1] && !alarm_setmode) {
+			if (alarm_hour[1] == hour && alarm_minute[1] == minute) {
+				alarm_changed[1] = !alarm_changed[1];
+				alarm_ring = true;
+			}
+		}
+
+		else if (alarm_changed[2] && !alarm_setmode) {
+			if (alarm_hour[2] == hour && alarm_minute[2] == minute) {
+				alarm_changed[2] = !alarm_changed[2];
+				alarm_ring = true;
+			}
+		}
+
+		else if (alarm_changed[3] && !alarm_setmode) {
+			if (alarm_hour[3] == hour && alarm_minute[3] == minute) {
+				alarm_changed[3] = !alarm_changed[3];
+				alarm_ring = true;
+			}
+		}
+
+		else if (alarm_changed[4] && !alarm_setmode) {
+			if (alarm_hour[4] == hour && alarm_minute[4] == minute) {
+				alarm_changed[4] = !alarm_changed[4];
+				alarm_ring = true;
+			}
+		}
+
+		else if (alarm_changed[5] && !alarm_setmode) {
+			if (alarm_hour[5] == hour && alarm_minute[5] == minute) {
+				alarm_changed[5] = !alarm_changed[5];
+				alarm_ring = true;
+			}
+		}
+
+		if (alarm_ring && !alarm_setmode) {
+			HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+		}
+
 		switch (mode) {
 		case 1:
 			Init_basic_operation();
@@ -210,6 +250,7 @@ int main(void) {
 			Timer_display_operation();
 			Timer_button_operation();
 			Init_button_operation();
+			break;
 		}
 
 		/* USER CODE END WHILE */
@@ -468,6 +509,11 @@ void Init_button_operation() {
 	else if (2500 <= Press_Time) { // 길게 누른 상태
 		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_14, GPIO_PIN_RESET);
 		Press_Mode = 3;
+	}
+
+	if (sw2_debounced) {
+
+		sw2_debounced = false;
 	}
 
 }
@@ -1373,32 +1419,38 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) { //외부 인터럽트 호출
 				HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_6);
 				sw1_debounced = true; // sw1_debounced 변수를 true로 설정하여 디바운스 처리 완료 표시
 				Press_Time = 0;	// sw1이 떼질 때 Press_Time 초기화
+				if (!alarm_ring) {
+					if (Press_Mode == 1 && !clock_setmode && !timer_setmode
+							&& !alarm_setmode) { //짧게 누르고 수정상태 아니면 모드 변경
+						mode++;
+						mode_changed = true;
+					}
 
-				if (Press_Mode == 1 && !clock_setmode && !timer_setmode
-						&& !alarm_setmode) { //짧게 누르고 수정상태 아니면 모드 변경
-					mode++;
-					mode_changed = true;
-				}
+					if (Press_Mode == 1 && clock_setmode) { //짧게 누르고 수정상태이면 수정값 증가시키기
+						item_select++;
+						if (item_select == 6) {
+							item_select = 0;
+						}
+					}
 
-				if (Press_Mode == 1 && clock_setmode) { //짧게 누르고 수정상태이면 수정값 증가시키기
-					item_select++;
-					if (item_select == 6) {
-						item_select = 0;
+					if (Press_Mode == 1 && timer_setmode) { //짧게 누르고 수정상태이면 수정값 증가시키기
+						item_select2++;
+						if (item_select2 == 3) {
+							item_select2 = 0;
+						}
+					}
+
+					if (Press_Mode == 1 && alarm_setmode) { //짧게 누르고 수정상태이면 수정값 증가시키기
+						item_select3++;
+						if (item_select3 == 4) {
+							item_select3 = 0;
+						}
 					}
 				}
 
-				if (Press_Mode == 1 && timer_setmode) { //짧게 누르고 수정상태이면 수정값 증가시키기
-					item_select2++;
-					if (item_select2 == 3) {
-						item_select2 = 0;
-					}
-				}
-
-				if (Press_Mode == 1 && alarm_setmode) { //짧게 누르고 수정상태이면 수정값 증가시키기
-					item_select3++;
-					if (item_select3 == 4) {
-						item_select3 = 0;
-					}
+				if (alarm_ring && !alarm_setmode) {
+					alarm_ring = false;
+					HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
 				}
 			}
 		}
