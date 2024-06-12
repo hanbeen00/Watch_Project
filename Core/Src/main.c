@@ -1179,13 +1179,14 @@ void Stopwatch_button_operation() {
 
 }
 
+bool timer_start = false;
+
 void Timer_button_operation() {
 // Enter timer setting mode on long press of button 1 (sw1)
 	if (sw1_debounced) {
 		if (Press_Mode >= 2) {
 			CLCD_Clear();
 			timer_setmode = !timer_setmode; // Toggle timer setting mode
-			timer_time = 0;
 			Press_Mode = 0;
 		}
 		sw1_debounced = false;
@@ -1231,19 +1232,20 @@ void Timer_button_operation() {
 				}
 			}
 		}
+		timer_time = timer_time_tmp;
 
 	} else {
 		// Starting/Stopping the timer using button 2 (sw2)
 		if (sw2_debounced) {
-			if (timer_time == 0) { // Start the timer
-				timer_time = timer_time_tmp;
-			} else { // Stop the timer
-				timer_time = 0;
-			}
+			timer_start = !timer_start;
 			sw2_debounced = false;
 		}
 
 		if (sw3_debounced) {
+			if (!timer_start) {
+				timer_time = 0;
+				timer_time_tmp = 0;
+			}
 			sw3_debounced = false;
 		}
 		if (sw4_debounced) {
@@ -1251,9 +1253,6 @@ void Timer_button_operation() {
 		}
 	}
 
-	if (timer_time_tmp <= 0) {
-		timer_time = 0;
-	}
 }
 
 void updateTime3() {
@@ -1291,17 +1290,31 @@ void updateTime4() {
 void Timer_basic_operation() {
 // If the timer is running, decrement the timer
 
-	if (timer_time == 0) {
+	if (!timer_start) {
 		if (timer_setmode) {
 			sprintf(str, "%16s", "TIMER           ");
 			CLCD_Puts(0, 0, str);
 		} else {
 			sprintf(str, "%16s", "TIMER      START");
 			CLCD_Puts(0, 0, str);
+			if (timer_time_tmp == 0) {
+				timer_time_tmp = timer_time;
+			}
+			HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_SET);
 		}
-	} else {
-		sprintf(str, "%16s", "TIMER    RUNNING");
-		CLCD_Puts(0, 0, str);
+	}
+
+	else {
+		if (timer_time_tmp == 0 && timer_start) {
+			sprintf(str, "%16s", "TIMER     FINISH");
+			CLCD_Puts(0, 0, str);
+			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_13);
+		}
+
+		else if (timer_time_tmp != 0 && timer_start) {
+			sprintf(str, "%16s", "TIMER    RUNNING");
+			CLCD_Puts(0, 0, str);
+		}
 	}
 
 }
@@ -1389,7 +1402,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) { //타이머 인터
 		if (stopwatch_running == true) {
 			stopwatch_time++;
 		}
-		if (timer_time > 0 && timer_time_tmp > 0) {
+		if (timer_start && timer_time_tmp > 0) {
 			timer_time_tmp--;
 		}
 
@@ -1422,6 +1435,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) { //외부 인터럽트 호출
 				if (!alarm_ring) {
 					if (Press_Mode == 1 && !clock_setmode && !timer_setmode
 							&& !alarm_setmode) { //짧게 누르고 수정상태 아니면 모드 변경
+						if (mode == 4) {
+							HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_SET);
+						}
 						mode++;
 						mode_changed = true;
 					}
