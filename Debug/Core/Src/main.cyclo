@@ -24,7 +24,7 @@
 ../Core/Src/main.c:1258:6:updateTime3	5
 ../Core/Src/main.c:1271:6:updateTime4	8
 ../Core/Src/main.c:1290:6:Timer_basic_operation	8
-../Core/Src/main.c:1322:6:Timer_display_operation	7
-../Core/Src/main.c:1378:6:HAL_TIM_PeriodElapsedCallback	15
-../Core/Src/main.c:1420:6:HAL_GPIO_EXTI_Callback	34
-../Core/Src/main.c:1533:6:Error_Handler	1
+../Core/Src/main.c:1324:6:Timer_display_operation	7
+../Core/Src/main.c:1380:6:HAL_TIM_PeriodElapsedCallback	15
+../Core/Src/main.c:1422:6:HAL_GPIO_EXTI_Callback	34
+../Core/Src/main.c:1535:6:Error_Handler	1

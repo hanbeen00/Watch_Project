@@ -1292,6 +1292,8 @@ void Timer_basic_operation() {
 
 	if (!timer_start) {
 		if (timer_setmode) {
+			sprintf(str, "SET");
+			CLCD_Puts(0, 1, str);
 			sprintf(str, "%16s", "TIMER           ");
 			CLCD_Puts(0, 0, str);
 		} else {
