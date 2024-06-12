@@ -74,16 +74,16 @@ bool mode_changed = false;
 
 //CLOCK 변수
 uint64_t clock_time = 0;
-uint8_t hour = 23;
-uint8_t minute = 59;
-uint8_t second = 50;
+uint8_t hour = 15;
+uint8_t minute = 31;
+uint8_t second = 12;
 uint16_t millisecond = 0;
 bool changed = false;
 bool buzzer = false;
 
-uint16_t year = 2024;
+uint16_t year = 2023;
 uint8_t month = 12;
-uint8_t day = 31;
+uint8_t day = 12;
 
 bool clock_setmode = false;
 uint8_t item_select = 0;
@@ -179,8 +179,12 @@ int main(void) {
 	/* USER CODE BEGIN WHILE */
 	while (1) {
 
-		if (mode > 5)
+		if (mode > 4) {
 			mode = 1;
+			if (mode == 1) {
+				HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_SET);
+			}
+		}
 
 		if (alarm_changed[1] && !alarm_setmode) {
 			if (alarm_hour[1] == hour && alarm_minute[1] == minute) {
@@ -222,9 +226,17 @@ int main(void) {
 		}
 
 		switch (mode) {
+
+		/*case 1:
+		 Init_basic_operation();
+		 Init_display_operation();
+		 Init_button_operation();
+		 break;*/
+
 		case 1:
-			Init_basic_operation();
-			Init_display_operation();
+			Clock_basic_operation();
+			Clock_display_operation();
+			Clock_button_operation();
 			Init_button_operation();
 			break;
 		case 2:
@@ -234,18 +246,12 @@ int main(void) {
 			Init_button_operation();
 			break;
 		case 3:
-			Clock_basic_operation();
-			Clock_display_operation();
-			Clock_button_operation();
-			Init_button_operation();
-			break;
-		case 4:
 			Stopwatch_basic_operation();
 			Stopwatch_display_operation();
 			Stopwatch_button_operation();
 			Init_button_operation();
 			break;
-		case 5:
+		case 4:
 			Timer_basic_operation();
 			Timer_display_operation();
 			Timer_button_operation();
@@ -1234,10 +1240,14 @@ void Timer_button_operation() {
 		}
 		timer_time = timer_time_tmp;
 
-	} else {
+	}
+
+	else {
 		// Starting/Stopping the timer using button 2 (sw2)
 		if (sw2_debounced) {
-			timer_start = !timer_start;
+			if (timer_time != 0) {
+				timer_start = !timer_start;
+			}
 			sw2_debounced = false;
 		}
 
@@ -1308,7 +1318,7 @@ void Timer_basic_operation() {
 
 	else {
 		if (timer_time_tmp == 0 && timer_start) {
-			sprintf(str, "%16s", "TIMER     FINISH");
+			sprintf(str, "%16s", "TIMER   FINISHED");
 			CLCD_Puts(0, 0, str);
 			HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_13);
 		}
@@ -1437,9 +1447,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) { //외부 인터럽트 호출
 				if (!alarm_ring) {
 					if (Press_Mode == 1 && !clock_setmode && !timer_setmode
 							&& !alarm_setmode) { //짧게 누르고 수정상태 아니면 모드 변경
-						if (mode == 4) {
-							HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_SET);
-						}
 						mode++;
 						mode_changed = true;
 					}
