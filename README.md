@@ -1,4 +1,6 @@
   STM32 F407VET6을 이용한 디지털 시계 개발
+  -----------
+  사용 보드 : https://smartstore.naver.com/mhivestore/products/4953744659
 
   모드 4개(일반 시계, 알람 설정, 스톱워치, 타이머)
 
