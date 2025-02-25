@@ -1,4 +1,4 @@
-  STM32 F407VET6을 이용한 디지털 시계 개발
+  STM32 F407VET6을 이용한 디지털 시계 구현
   -----------
   YouTube : https://youtu.be/Ngy91viOW6I
   - 사용 보드 : https://smartstore.naver.com/mhivestore/products/4953744659
