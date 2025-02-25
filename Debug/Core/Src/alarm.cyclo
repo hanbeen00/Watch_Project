@@ -1,0 +1,6 @@
+../Core/Src/alarm.c:8:6:Alarm_basic_operation	3
+../Core/Src/alarm.c:20:6:Alarm_display_operation	14
+../Core/Src/alarm.c:122:6:Alarm_button_operation	18
+../Core/Src/alarm.c:179:6:updateTime5	9
+../Core/Src/alarm.c:216:6:updateTime6	9
+../Core/Src/alarm.c:253:6:Alarm_Check	6

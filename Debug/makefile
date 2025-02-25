@@ -60,8 +60,8 @@ all: main-build
 main-build: Watch_Project.elf secondary-outputs
 
 # Tool invocations
-Watch_Project.elf Watch_Project.map: $(OBJS) $(USER_OBJS) C:\project\study\Watch_Project\STM32F407VETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "Watch_Project.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\project\study\Watch_Project\STM32F407VETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Watch_Project.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Watch_Project.elf Watch_Project.map: $(OBJS) $(USER_OBJS) C:\Users\Hanbin\Desktop\workspace\Watch_Project\STM32F407VETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "Watch_Project.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\Hanbin\Desktop\workspace\Watch_Project\STM32F407VETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Watch_Project.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

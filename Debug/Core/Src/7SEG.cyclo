@@ -1,2 +1,2 @@
-../Core/Src/7SEG.c:25:6:_7SEG_GPIO_Init	1
-../Core/Src/7SEG.c:80:6:_7SEG_SetNumber	27
+../Core/Src/7SEG.c:7:6:_7SEG_GPIO_Init	1
+../Core/Src/7SEG.c:62:6:_7SEG_SetNumber	27

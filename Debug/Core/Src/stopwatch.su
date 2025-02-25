@@ -1,0 +1,3 @@
+../Core/Src/stopwatch.c:8:6:Stopwatch_basic_operation	4	static
+../Core/Src/stopwatch.c:12:6:Stopwatch_display_operation	32	static
+../Core/Src/stopwatch.c:28:6:Stopwatch_button_operation	40	static

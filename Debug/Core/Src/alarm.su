@@ -1,0 +1,6 @@
+../Core/Src/alarm.c:8:6:Alarm_basic_operation	4	static
+../Core/Src/alarm.c:20:6:Alarm_display_operation	16	static
+../Core/Src/alarm.c:122:6:Alarm_button_operation	8	static
+../Core/Src/alarm.c:179:6:updateTime5	4	static
+../Core/Src/alarm.c:216:6:updateTime6	4	static
+../Core/Src/alarm.c:253:6:Alarm_Check	16	static

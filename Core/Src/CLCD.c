@@ -1,21 +1,5 @@
 /*
  * This is a library for 16x2 character LCD.
- * This has been tested on M-HIVE STM32F4 EduBoard V1.2 (Evaluation board)
- * Buy on https://smartstore.naver.com/mhivestore
- *
- * Development environment specifics:
- * STM32F407VET6
- * Atollic TrueSTUDIO 9.0.1
- * CubeMX 4.26.0
- * STM32Cube FW_F4 V1.21.0
- * HAL Driver(RCC and GPIO)
- *
- * Written by ChrisP(Wonyeob Park) @ M-HIVE Embedded Academy, written when tigers used to smoke.
- * Rev. 1.0
- *
- * https://github.com/ChrisWonyeobPark/M-HIVE_STM32_tutorial_course
- * https://www.udemy.com/course/hal-cubemx-truestudio-stm32f4/?referralCode=E2BDCA5EFF512BF0E94E
- * https://www.inflearn.com/course/stm32f4
  */
 
 #include "CLCD.h"
@@ -55,62 +39,62 @@ void CLCD_GPIO_Init(void)
 
 void CLCD_Write_Instruction(unsigned char b)
 {
-	//»óÀ§ 4ºñÆ®
+	//ï¿½ï¿½ï¿½ï¿½ 4ï¿½ï¿½Æ®
 	GPIO_D7->ODR = (b & 0x80) ? GPIO_D7->ODR | GPIO_PIN_D7 : GPIO_D7->ODR & ~GPIO_PIN_D7; //D7
 	GPIO_D6->ODR = (b & 0x40) ? GPIO_D6->ODR | GPIO_PIN_D6 : GPIO_D6->ODR & ~GPIO_PIN_D6; //D6
 	GPIO_D5->ODR = (b & 0x20) ? GPIO_D5->ODR | GPIO_PIN_D5 : GPIO_D5->ODR & ~GPIO_PIN_D5; //D5
 	GPIO_D4->ODR = (b & 0x10) ? GPIO_D4->ODR | GPIO_PIN_D4 : GPIO_D4->ODR & ~GPIO_PIN_D4; //D4
 	
-	GPIO_RS->ODR = GPIO_RS->ODR & ~GPIO_PIN_RS; //RS¸¦ Low
-	GPIO_RW->ODR = GPIO_RW->ODR & ~GPIO_PIN_RW; //RW¸¦ Low
-	GPIO_EN->ODR = GPIO_EN->ODR & ~GPIO_PIN_EN; //EN¸¦ Low
+	GPIO_RS->ODR = GPIO_RS->ODR & ~GPIO_PIN_RS; //RSï¿½ï¿½ Low
+	GPIO_RW->ODR = GPIO_RW->ODR & ~GPIO_PIN_RW; //RWï¿½ï¿½ Low
+	GPIO_EN->ODR = GPIO_EN->ODR & ~GPIO_PIN_EN; //ENï¿½ï¿½ Low
 	
-	GPIO_EN->ODR = GPIO_EN->ODR | GPIO_PIN_EN; //EN¸¦ High
-	GPIO_EN->ODR = GPIO_EN->ODR & ~GPIO_PIN_EN; //EN¸¦ Low
+	GPIO_EN->ODR = GPIO_EN->ODR | GPIO_PIN_EN; //ENï¿½ï¿½ High
+	GPIO_EN->ODR = GPIO_EN->ODR & ~GPIO_PIN_EN; //ENï¿½ï¿½ Low
 	
-	//ÇÏÀ§ 4ºñÆ®
+	//ï¿½ï¿½ï¿½ï¿½ 4ï¿½ï¿½Æ®
 	GPIO_D7->ODR = (b & 0x08) ? GPIO_D7->ODR | GPIO_PIN_D7 : GPIO_D7->ODR & ~GPIO_PIN_D7; //D7
 	GPIO_D6->ODR = (b & 0x04) ? GPIO_D6->ODR | GPIO_PIN_D6 : GPIO_D6->ODR & ~GPIO_PIN_D6; //D6
 	GPIO_D5->ODR = (b & 0x02) ? GPIO_D5->ODR | GPIO_PIN_D5 : GPIO_D5->ODR & ~GPIO_PIN_D5; //D5
 	GPIO_D4->ODR = (b & 0x01) ? GPIO_D4->ODR | GPIO_PIN_D4 : GPIO_D4->ODR & ~GPIO_PIN_D4; //D4
 
-	GPIO_RS->ODR = GPIO_RS->ODR & ~GPIO_PIN_RS; //RS¸¦ Low
-	GPIO_RW->ODR = GPIO_RW->ODR & ~GPIO_PIN_RW; //RW¸¦ Low
-	GPIO_EN->ODR = GPIO_EN->ODR & ~GPIO_PIN_EN; //EN¸¦ Low
+	GPIO_RS->ODR = GPIO_RS->ODR & ~GPIO_PIN_RS; //RSï¿½ï¿½ Low
+	GPIO_RW->ODR = GPIO_RW->ODR & ~GPIO_PIN_RW; //RWï¿½ï¿½ Low
+	GPIO_EN->ODR = GPIO_EN->ODR & ~GPIO_PIN_EN; //ENï¿½ï¿½ Low
 
-	GPIO_EN->ODR = GPIO_EN->ODR | GPIO_PIN_EN; //EN¸¦ High
-	GPIO_EN->ODR = GPIO_EN->ODR & ~GPIO_PIN_EN; //EN¸¦ Low
+	GPIO_EN->ODR = GPIO_EN->ODR | GPIO_PIN_EN; //ENï¿½ï¿½ High
+	GPIO_EN->ODR = GPIO_EN->ODR & ~GPIO_PIN_EN; //ENï¿½ï¿½ Low
 
 	HAL_Delay(1);
 }
 
 void CLCD_Write_Display(unsigned char b)
 {
-	//»óÀ§ 4ºñÆ®
+	//ï¿½ï¿½ï¿½ï¿½ 4ï¿½ï¿½Æ®
 	GPIO_D7->ODR = (b & 0x80) ? GPIO_D7->ODR | GPIO_PIN_D7 : GPIO_D7->ODR & ~GPIO_PIN_D7; //D7
 	GPIO_D6->ODR = (b & 0x40) ? GPIO_D6->ODR | GPIO_PIN_D6 : GPIO_D6->ODR & ~GPIO_PIN_D6; //D6
 	GPIO_D5->ODR = (b & 0x20) ? GPIO_D5->ODR | GPIO_PIN_D5 : GPIO_D5->ODR & ~GPIO_PIN_D5; //D5
 	GPIO_D4->ODR = (b & 0x10) ? GPIO_D4->ODR | GPIO_PIN_D4 : GPIO_D4->ODR & ~GPIO_PIN_D4; //D4
 	
-	GPIO_RS->ODR = GPIO_RS->ODR | GPIO_PIN_RS; //RS¸¦ High
-	GPIO_RW->ODR = GPIO_RW->ODR & ~GPIO_PIN_RW; //RW¸¦ Low
-	GPIO_EN->ODR = GPIO_EN->ODR & ~GPIO_PIN_EN; //EN¸¦ Low
+	GPIO_RS->ODR = GPIO_RS->ODR | GPIO_PIN_RS; //RSï¿½ï¿½ High
+	GPIO_RW->ODR = GPIO_RW->ODR & ~GPIO_PIN_RW; //RWï¿½ï¿½ Low
+	GPIO_EN->ODR = GPIO_EN->ODR & ~GPIO_PIN_EN; //ENï¿½ï¿½ Low
 	
-	GPIO_EN->ODR = GPIO_EN->ODR | GPIO_PIN_EN; //EN¸¦ High
-	GPIO_EN->ODR = GPIO_EN->ODR & ~GPIO_PIN_EN; //EN¸¦ Low
+	GPIO_EN->ODR = GPIO_EN->ODR | GPIO_PIN_EN; //ENï¿½ï¿½ High
+	GPIO_EN->ODR = GPIO_EN->ODR & ~GPIO_PIN_EN; //ENï¿½ï¿½ Low
 	
-	//ÇÏÀ§ 4ºñÆ®
+	//ï¿½ï¿½ï¿½ï¿½ 4ï¿½ï¿½Æ®
 	GPIO_D7->ODR = (b & 0x08) ? GPIO_D7->ODR | GPIO_PIN_D7 : GPIO_D7->ODR & ~GPIO_PIN_D7; //D7
 	GPIO_D6->ODR = (b & 0x04) ? GPIO_D6->ODR | GPIO_PIN_D6 : GPIO_D6->ODR & ~GPIO_PIN_D6; //D6
 	GPIO_D5->ODR = (b & 0x02) ? GPIO_D5->ODR | GPIO_PIN_D5 : GPIO_D5->ODR & ~GPIO_PIN_D5; //D5
 	GPIO_D4->ODR = (b & 0x01) ? GPIO_D4->ODR | GPIO_PIN_D4 : GPIO_D4->ODR & ~GPIO_PIN_D4; //D4
 	
-	GPIO_RS->ODR = GPIO_RS->ODR | GPIO_PIN_RS; //RS¸¦ High
-	GPIO_RW->ODR = GPIO_RW->ODR & ~GPIO_PIN_RW; //RW¸¦ Low
-	GPIO_EN->ODR = GPIO_EN->ODR & ~GPIO_PIN_EN; //EN¸¦ Low
+	GPIO_RS->ODR = GPIO_RS->ODR | GPIO_PIN_RS; //RSï¿½ï¿½ High
+	GPIO_RW->ODR = GPIO_RW->ODR & ~GPIO_PIN_RW; //RWï¿½ï¿½ Low
+	GPIO_EN->ODR = GPIO_EN->ODR & ~GPIO_PIN_EN; //ENï¿½ï¿½ Low
 	
-	GPIO_EN->ODR = GPIO_EN->ODR | GPIO_PIN_EN; //EN¸¦ High
-	GPIO_EN->ODR = GPIO_EN->ODR & ~GPIO_PIN_EN; //EN¸¦ Low
+	GPIO_EN->ODR = GPIO_EN->ODR | GPIO_PIN_EN; //ENï¿½ï¿½ High
+	GPIO_EN->ODR = GPIO_EN->ODR & ~GPIO_PIN_EN; //ENï¿½ï¿½ Low
 	
 	HAL_Delay(1);
 }

@@ -1,0 +1,6 @@
+../Core/Src/clock.c:8:6:isLeapYear	4
+../Core/Src/clock.c:12:6:Clock_basic_operation	4
+../Core/Src/clock.c:35:6:Clock_display_operation	15
+../Core/Src/clock.c:141:6:Clock_button_operation	20
+../Core/Src/clock.c:208:6:updateTime	31
+../Core/Src/clock.c:273:6:updateTime2	31

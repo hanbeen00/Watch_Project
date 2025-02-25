@@ -1,0 +1,5 @@
+../Core/Src/initprocess.c:9:6:Init_Peripherals	16	static
+../Core/Src/initprocess.c:15:6:Init_LEDs	8	static
+../Core/Src/initprocess.c:25:6:Init_TIMERS	16	static
+../Core/Src/initprocess.c:31:6:Init_Display	8	static
+../Core/Src/initprocess.c:37:6:Init_button_operation	8	static

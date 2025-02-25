@@ -1,21 +1,5 @@
 /*
  * This is a library for 16x2 character LCD.
- * This has been tested on M-HIVE STM32F4 EduBoard V1.2 (Evaluation board)
- * Buy on https://smartstore.naver.com/mhivestore
- *
- * Development environment specifics:
- * STM32F407VET6
- * Atollic TrueSTUDIO 9.0.1
- * CubeMX 4.26.0
- * STM32Cube FW_F4 V1.21.0
- * HAL Driver(RCC and GPIO)
- *
- * Written by ChrisP(Wonyeob Park) @ M-HIVE Embedded Academy, written when tigers used to smoke.
- * Rev. 1.0
- *
- * https://github.com/ChrisWonyeobPark/M-HIVE_STM32_tutorial_course
- * https://www.udemy.com/course/hal-cubemx-truestudio-stm32f4/?referralCode=E2BDCA5EFF512BF0E94E
- * https://www.inflearn.com/course/stm32f4
  */
 
 #ifndef _CLCD_H
